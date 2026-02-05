@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
+import { HiCpuChip, HiBolt, HiPuzzlePiece, HiChartBar } from 'react-icons/hi2';
 
 export const DemoDashboard = () => {
     const [balance, setBalance] = useState(100.00);
@@ -101,7 +102,7 @@ export const DemoDashboard = () => {
                     <DashboardCard 
                         title="AI Inference" 
                         price="$0.02" 
-                        icon="🤖"
+                        icon={<HiCpuChip />}
                         desc="Query LLMs per-token without signing transactions."
                         reason="Standard Gas: $5.00+ vs Yellow: $0.00"
                         onAction={() => handleAction(0.02)}
@@ -112,7 +113,7 @@ export const DemoDashboard = () => {
                     <DashboardCard 
                         title="Micro-API" 
                         price="$0.005" 
-                        icon="⚡"
+                        icon={<HiBolt />}
                         desc="Buy real-time data feeds (Sports, Weather, Stocks)."
                         reason="Enables pay-per-request business models."
                         onAction={() => handleAction(0.005)}
@@ -123,7 +124,7 @@ export const DemoDashboard = () => {
                     <DashboardCard 
                         title="P2P Chess" 
                         price="Wager" 
-                        icon="♟️"
+                        icon={<HiPuzzlePiece />}
                         desc="Validate moves off-chain. Only settle the winner."
                         reason="100 moves, 0 gas. Instant finality."
                         onAction={() => handleAction(0)}
@@ -134,7 +135,7 @@ export const DemoDashboard = () => {
                      <DashboardCard 
                         title="Yellow DEX" 
                         price="Perps" 
-                        icon="📊"
+                        icon={<HiChartBar />}
                         desc="High-frequency order matching engine."
                         reason="CEX experience with non-custodial security."
                         onAction={() => handleAction(0)} 

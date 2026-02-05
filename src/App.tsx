@@ -13,6 +13,7 @@ import { Partners } from './components/dom/Partners';
 import { useLayoutEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import gsap from 'gsap';
+import { HiPlay, HiDocumentText, HiInboxArrowDown, HiBolt, HiShieldCheck } from 'react-icons/hi2';
 
 function App() {
   const contentRef = useRef<HTMLDivElement>(null); // Ref for animation
@@ -84,14 +85,20 @@ function App() {
 
             <AnimatedText delay={0.8}>
               <div className="hero-chips" style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap' }}>
-                {['1 Deposit → ∞ Actions', 'Instant Settlement', 'Non-Custodial'].map((text, i) => (
+                {[
+                  { text: '1 Deposit → ∞ Actions', icon: <HiInboxArrowDown /> },
+                  { text: 'Instant Settlement', icon: <HiBolt /> },
+                  { text: 'Non-Custodial', icon: <HiShieldCheck /> }
+                ].map((item, i) => (
                   <motion.span 
                     key={i}
                     className="chip hover-scale"
                     whileHover={{ scale: 1.05 }}
                     transition={{ type: "spring", stiffness: 300 }}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
-                    <strong>{text.split(' ')[0]}</strong> {text.split(' ').slice(1).join(' ')}
+                    {item.icon}
+                    <span><strong>{item.text.split(' ')[0]}</strong> {item.text.split(' ').slice(1).join(' ')}</span>
                   </motion.span>
                 ))}
               </div>
@@ -100,10 +107,14 @@ function App() {
             <AnimatedText delay={1}>
               <div className="hero-actions" style={{ display: 'flex', gap: '12px' }}>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button size="lg">Start Session Demo</Button>
+                  <Button size="lg" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <HiPlay /> Start Session Demo
+                  </Button>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button variant="secondary" size="lg">Read Docs</Button>
+                  <Button variant="secondary" size="lg" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <HiDocumentText /> Read Docs
+                  </Button>
                 </motion.div>
               </div>
             </AnimatedText>

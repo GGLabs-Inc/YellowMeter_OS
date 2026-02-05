@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { HiCpuChip, HiBolt, HiChatBubbleLeftRight } from 'react-icons/hi2';
+import { IoGameController } from 'react-icons/io5';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -32,22 +34,22 @@ export const UseCases = () => {
     {
       title: "AI Agents & DePIN",
       desc: "Monetize generic compute, LLM inference, or RAG queries per-token or per-second without signing transactions.",
-      icon: "🤖"
+      icon: <HiCpuChip />
     },
     {
       title: "On-Chain Gaming",
       desc: "Validate movements, attacks, and loot drops off-chain. Settle the final game state and rewards in one go.",
-      icon: "🎮"
+      icon: <IoGameController />
     },
     {
       title: "High-Frequency APIs",
       desc: "Replace monthly subscriptions with real-time micropayments for API gateways and Oracle data feeds.",
-      icon: "⚡"
+      icon: <HiBolt />
     },
     {
       title: "SocialFi & Content",
       desc: "Tips, likes, and content unlocks happen instantly. No more popping up MetaMask for a $0.05 interaction.",
-      icon: "💬"
+      icon: <HiChatBubbleLeftRight />
     }
   ];
 
