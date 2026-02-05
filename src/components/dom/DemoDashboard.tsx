@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Card } from '../ui/Card';
 import { Button } from '../ui/Button';
 
@@ -14,26 +15,45 @@ export const DemoDashboard = () => {
     return (
         <section style={{ margin: '80px 0' }}>
             <div className="section-head" style={{ marginBottom: '30px', textAlign: 'center' }}>
-                <div style={{ 
-                    display: 'inline-block', 
-                    padding: '6px 16px', 
-                    borderRadius: '20px', 
-                    background: 'rgba(255, 230, 0, 0.1)', 
-                    color: 'var(--yellow)',
-                    fontSize: '0.8rem',
-                    fontWeight: 'bold',
-                    marginBottom: '16px',
-                    border: '1px solid rgba(255, 230, 0, 0.2)'
-                }}>
+                <motion.div 
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5 }}
+                    style={{ 
+                        display: 'inline-block', 
+                        padding: '6px 16px', 
+                        borderRadius: '20px', 
+                        background: 'rgba(255, 230, 0, 0.1)', 
+                        color: 'var(--yellow)',
+                        fontSize: '0.8rem',
+                        fontWeight: 'bold',
+                        marginBottom: '16px',
+                        border: '1px solid rgba(255, 230, 0, 0.2)'
+                    }}
+                >
                     INTERACTIVE PREVIEW
-                </div>
-                <h2 style={{ fontSize: '2rem', margin: '0 0 10px' }}>
-                    The <span className="text-yellow">Action</span> Economy
-                </h2>
-                <p className="text-muted" style={{ maxWidth: '600px', margin: '0 auto' }}>
+                </motion.div>
+                <motion.h2 
+                    initial={{ y: 20, opacity: 0 }}
+                    whileInView={{ y: 0, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.2 }}
+                    style={{ fontSize: '2rem', margin: '0 0 10px' }}
+                >
+                    The <span className="gradient-text">Action</span> Economy
+                </motion.h2>
+                <motion.p 
+                    initial={{ y: 20, opacity: 0 }}
+                    whileInView={{ y: 0, opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.3 }}
+                    className="text-muted" 
+                    style={{ maxWidth: '600px', margin: '0 auto' }}
+                >
                     Experience <strong>0 gas</strong> and <strong>50ms latency</strong>. 
                     Click the actions below to simulate a live State Channel session.
-                </p>
+                </motion.p>
             </div>
 
             {/* SIMULATED DASHBOARD CONTAINER */}
@@ -106,7 +126,7 @@ export const DemoDashboard = () => {
                         icon="♟️"
                         desc="Validate moves off-chain. Only settle the winner."
                         reason="100 moves, 0 gas. Instant finality."
-                        onAction={() => handleAction(0)} // No cost to move
+                        onAction={() => handleAction(0)}
                         btnText="Make Move (Free)"
                     />
 
@@ -130,44 +150,58 @@ export const DemoDashboard = () => {
 // Internal Sub-component for the grid items
 const DashboardCard = ({ title, price, icon, desc, reason, onAction, btnText }: any) => {
     return (
-        <Card style={{ background: '#161b22', padding: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                <div style={{ 
-                    width: '40px', height: '40px', 
-                    borderRadius: '8px', background: 'rgba(255, 230, 0, 0.1)', 
-                    color: 'var(--yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' 
-                }}>
-                    {icon}
+        <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -5 }}
+            transition={{ duration: 0.3 }}
+        >
+            <Card className="hover-glow" style={{ background: '#161b22', padding: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                    <motion.div 
+                        style={{ 
+                            width: '40px', height: '40px', 
+                            borderRadius: '8px', background: 'rgba(255, 230, 0, 0.1)', 
+                            color: 'var(--yellow)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' 
+                        }}
+                        whileHover={{ rotate: [0, -10, 10, 0], scale: 1.1 }}
+                        transition={{ duration: 0.5 }}
+                    >
+                        {icon}
+                    </motion.div>
+                    <div style={{ 
+                        background: 'rgba(255,255,255,0.1)', 
+                        padding: '4px 8px', borderRadius: '4px', 
+                        fontSize: '0.75rem', fontFamily: 'var(--mono)' 
+                    }}>
+                        {price}
+                    </div>
                 </div>
+                
+                <h3 style={{ fontSize: '1.1rem', margin: '0 0 8px', color: '#fff' }}>{title}</h3>
+                <p style={{ fontSize: '0.9rem', color: 'var(--muted)', margin: '0 0 16px', lineHeight: 1.5, minHeight: '40px' }}>
+                    {desc}
+                </p>
+
                 <div style={{ 
-                    background: 'rgba(255,255,255,0.1)', 
-                    padding: '4px 8px', borderRadius: '4px', 
-                    fontSize: '0.75rem', fontFamily: 'var(--mono)' 
+                    fontSize: '0.8rem', 
+                    padding: '10px', 
+                    background: 'rgba(0,0,0,0.3)', 
+                    borderRadius: '8px', 
+                    marginBottom: '16px',
+                    color: 'rgba(255,255,255,0.7)'
                 }}>
-                    {price}
+                    <strong style={{ color: 'var(--yellow)' }}>Why Yellow?</strong><br/>
+                    {reason}
                 </div>
-            </div>
-            
-            <h3 style={{ fontSize: '1.1rem', margin: '0 0 8px', color: '#fff' }}>{title}</h3>
-            <p style={{ fontSize: '0.9rem', color: 'var(--muted)', margin: '0 0 16px', lineHeight: 1.5, minHeight: '40px' }}>
-                {desc}
-            </p>
 
-            <div style={{ 
-                fontSize: '0.8rem', 
-                padding: '10px', 
-                background: 'rgba(0,0,0,0.3)', 
-                borderRadius: '8px', 
-                marginBottom: '16px',
-                color: 'rgba(255,255,255,0.7)'
-            }}>
-                <strong style={{ color: 'var(--yellow)' }}>Why Yellow?</strong><br/>
-                {reason}
-            </div>
-
-            <Button variant="secondary" style={{ width: '100%', fontSize: '0.85rem' }} onClick={onAction}>
-                {btnText}
-            </Button>
-        </Card>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button variant="secondary" style={{ width: '100%', fontSize: '0.85rem' }} onClick={onAction}>
+                        {btnText}
+                    </Button>
+                </motion.div>
+            </Card>
+        </motion.div>
     )
 }

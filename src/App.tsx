@@ -1,13 +1,17 @@
 import { Layout } from './components/layout/Layout';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
+import { Preloader } from './components/layout/Preloader';
 import { Card } from './components/ui/Card';
 import { Button } from './components/ui/Button';
+import { AnimatedText, FadeInUp } from './components/ui/AnimatedText';
 import { Architecture } from './components/dom/Architecture';
 import { UseCases } from './components/dom/UseCases';
-import { DemoDashboard } from './components/dom/DemoDashboard'; // Added Demo
-import { useLayoutEffect, useRef } from 'react'; // Added Hooks
-import gsap from 'gsap'; // Added GSAP
+import { DemoDashboard } from './components/dom/DemoDashboard';
+import { Partners } from './components/dom/Partners';
+import { useLayoutEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import gsap from 'gsap';
 
 function App() {
   const contentRef = useRef<HTMLDivElement>(null); // Ref for animation
@@ -31,44 +35,64 @@ function App() {
   }, []);
 
   return (
-    <Layout>
-      <Header />
+    <>
+      <Preloader />
+      <Layout>
+        <Header />
       
       <div ref={contentRef} style={{ padding: '40px 0 80px' }}>
         {/* --- HERO SECTION --- */}
         <section className="hero" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '18px', marginBottom: '40px' }}>
-          <Card>
-            <div className="hero-badge" style={{ fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '.12em', color: 'rgba(231,234,243,.75)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-              <span className="status-dot green"></span>
-              Available on Testnet
-            </div>
+          <Card className="glow-border">
+            <AnimatedText delay={0.2}>
+              <div className="hero-badge" style={{ fontFamily: 'var(--mono)', fontSize: '12px', letterSpacing: '.12em', color: 'rgba(231,234,243,.75)', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
+                <motion.span 
+                  className="status-dot green"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                ></motion.span>
+                Available on Testnet
+              </div>
+            </AnimatedText>
             
-            <h2 className="hero-title" style={{ fontSize: '3rem', lineHeight: 1.1, margin: '0 0 16px', letterSpacing: '-0.02em' }}>
-              Action-based Economic <br />
-              Sessions for <span style={{ color: 'var(--yellow)' }}>Web3</span>
-            </h2>
-            
-            <p className="hero-text" style={{ fontSize: '1.1rem', color: 'var(--muted)', maxWidth: '650px', marginBottom: '24px', lineHeight: 1.6 }}>
-              YellowMeter OS converts digital actions into economic units off-chain.
-              Execute thousands of actions instantly with <strong style={{ color: '#fff' }}>zero gas per action</strong> and settle with a single on-chain transaction.
-            </p>
+            <AnimatedText delay={0.4}>
+              <h2 className="hero-title" style={{ fontSize: '3rem', lineHeight: 1.1, margin: '0 0 16px', letterSpacing: '-0.02em' }}>
+                Action-based Economic <br />
+                Sessions for <span className="gradient-text" style={{ fontWeight: 'bold' }}>Web3</span>
+              </h2>
+            </AnimatedText>
+            <AnimatedText delay={0.6}>
+              <p className="hero-text" style={{ fontSize: '1.1rem', color: 'var(--muted)', maxWidth: '650px', marginBottom: '24px', lineHeight: 1.6 }}>
+                YellowMeter OS converts digital actions into economic units off-chain.
+                Execute thousands of actions instantly with <strong style={{ color: '#fff' }}>zero gas per action</strong> and settle with a single on-chain transaction.
+              </p>
+            </AnimatedText>
 
-            <div className="hero-chips" style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap' }}>
-              <span className="chip">
-                <strong>1 Deposit</strong> → ∞ Actions
-              </span>
-               <span className="chip">
-                <strong>Instant</strong> Settlement
-              </span>
-               <span className="chip">
-                <strong>Non-Custodial</strong>
-              </span>
-            </div>
+            <AnimatedText delay={0.8}>
+              <div className="hero-chips" style={{ display: 'flex', gap: '10px', marginBottom: '28px', flexWrap: 'wrap' }}>
+                {['1 Deposit → ∞ Actions', 'Instant Settlement', 'Non-Custodial'].map((text, i) => (
+                  <motion.span 
+                    key={i}
+                    className="chip hover-scale"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ type: "spring", stiffness: 300 }}
+                  >
+                    <strong>{text.split(' ')[0]}</strong> {text.split(' ').slice(1).join(' ')}
+                  </motion.span>
+                ))}
+              </div>
+            </AnimatedText>
 
-            <div className="hero-actions" style={{ display: 'flex', gap: '12px' }}>
-              <Button size="lg">Start Session Demo</Button>
-              <Button variant="secondary" size="lg">Read Docs</Button>
-            </div>
+            <AnimatedText delay={1}>
+              <div className="hero-actions" style={{ display: 'flex', gap: '12px' }}>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button size="lg">Start Session Demo</Button>
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button variant="secondary" size="lg">Read Docs</Button>
+                </motion.div>
+              </div>
+            </AnimatedText>
           </Card>
         </section>
 
@@ -76,22 +100,28 @@ function App() {
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '18px' }}>
           
           {/* Card 1: Problem */}
-          <Card className="info-card" style={{ background: 'rgba(12, 16, 32, 0.4)' }}>
-            <h3 style={{ margin: '0 0 10px', fontSize: '1.2rem' }}>The Problem</h3>
-            <p style={{ color: 'var(--muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
-              Web3 charges for <strong>transactions</strong>, not actions. 
-              High-frequency apps (Gaming, AI, Social) are impossible with gas fees and wallet popups for every move.
-            </p>
-          </Card>
+          <FadeInUp delay={0}>
+            <Card className="info-card hover-glow" style={{ background: 'rgba(12, 16, 32, 0.4)' }}>
+              <h3 style={{ margin: '0 0 10px', fontSize: '1.2rem' }}>The Problem</h3>
+              <p style={{ color: 'var(--muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                Web3 charges for <strong>transactions</strong>, not actions. 
+                High-frequency apps (Gaming, AI, Social) are impossible with gas fees and wallet popups for every move.
+              </p>
+            </Card>
+          </FadeInUp>
 
           {/* Card 2: Solution */}
-          <Card className="info-card" style={{ background: 'rgba(12, 16, 32, 0.4)', borderColor: 'rgba(255, 230, 0, 0.3)' }}>
-            <h3 style={{ margin: '0 0 10px', fontSize: '1.2rem', color: 'var(--yellow)' }}>The YellowMeter Fix</h3>
-            <p style={{ color: 'var(--muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
-              <strong>Pay for what you do.</strong> Open a session, perform 100+ actions off-chain, and settle once. 
-              Experience Web2 speed with Web3 security.
-            </p>
-          </Card>
+          <FadeInUp delay={0.2}>
+            <Card className="info-card glow-border" style={{ background: 'rgba(12, 16, 32, 0.4)', borderColor: 'rgba(255, 230, 0, 0.3)' }}>
+              <h3 style={{ margin: '0 0 10px', fontSize: '1.2rem' }}>
+                <span className="gradient-text">The YellowMeter Fix</span>
+              </h3>
+              <p style={{ color: 'var(--muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
+                <strong>Pay for what you do.</strong> Open a session, perform 100+ actions off-chain, and settle once. 
+                Experience Web2 speed with Web3 security.
+              </p>
+            </Card>
+          </FadeInUp>
 
         </section>
 
@@ -106,10 +136,14 @@ function App() {
         {/* --- ARCHITECTURE SECTION --- */}
         <Architecture />
 
+        {/* --- PARTNERS SECTION --- */}
+        <Partners />
+
         <Footer />
 
       </div>
     </Layout>
+    </>
   )
 }
 

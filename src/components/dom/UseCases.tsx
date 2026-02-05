@@ -1,4 +1,6 @@
 import { Card } from '../ui/Card';
+import { FadeInUp } from '../ui/AnimatedText';
+import { motion } from 'framer-motion';
 import { useRef, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -62,13 +64,21 @@ export const UseCases = () => {
 
         <div className="cases-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
             {cases.map((item, i) => (
-                <Card key={i} className="case-card" style={{ background: 'rgba(12, 16, 32, 0.45)' }}>
-                    <div style={{ fontSize: '2rem', marginBottom: '16px' }}>{item.icon}</div>
-                    <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', color: '#fff' }}>{item.title}</h3>
-                    <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.5, margin: 0 }}>
-                        {item.desc}
-                    </p>
-                </Card>
+                <FadeInUp key={i} delay={i * 0.1}>
+                    <Card className="case-card hover-glow" style={{ background: 'rgba(12, 16, 32, 0.45)' }}>
+                        <motion.div 
+                            style={{ fontSize: '2rem', marginBottom: '16px' }}
+                            animate={{ rotate: [0, 10, -10, 0] }}
+                            transition={{ duration: 2, delay: i * 0.2, repeat: Infinity, repeatDelay: 3 }}
+                        >
+                            {item.icon}
+                        </motion.div>
+                        <h3 style={{ fontSize: '1.1rem', marginBottom: '8px', color: '#fff' }}>{item.title}</h3>
+                        <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.5, margin: 0 }}>
+                            {item.desc}
+                        </p>
+                    </Card>
+                </FadeInUp>
             ))}
         </div>
     </section>

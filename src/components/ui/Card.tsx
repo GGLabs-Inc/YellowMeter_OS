@@ -15,6 +15,7 @@ export const Card = ({ children, className = '', style = {}, noPadding = false }
     boxShadow: 'var(--shadow)',
     overflow: 'hidden',
     position: 'relative',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
     ...style
   };
 
@@ -25,7 +26,18 @@ export const Card = ({ children, className = '', style = {}, noPadding = false }
   };
 
   return (
-    <div className={`card ${className}`} style={cardStyle}>
+    <div 
+      className={`card hover-lift ${className}`} 
+      style={cardStyle}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-8px)';
+        e.currentTarget.style.boxShadow = '0 20px 60px rgba(255, 230, 0, 0.2), 0 0 40px rgba(255, 230, 0, 0.1)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = 'var(--shadow)';
+      }}
+    >
       {/* Background Gradients Overlay */}
       <div style={{
         position: 'absolute',

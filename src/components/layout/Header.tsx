@@ -1,4 +1,5 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { LightningLogo } from '../3d/LightningLogo';
 
 export const Header = () => {
   return (
@@ -21,14 +22,7 @@ export const Header = () => {
       }}>
         {/* Brand */}
         <div className="brand" style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: '220px' }}>
-          <div className="logo logo-scan" style={{
-            width: '34px', height: '34px', borderRadius: '10px',
-            background: 'linear-gradient(145deg, rgba(255, 230, 0, .9), rgba(12, 16, 32, .8))',
-            boxShadow: '0 0 0 1px rgba(255, 230, 0, .25), 0 18px 40px rgba(0,0,0,.45)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
-          </div>
+          <LightningLogo />
           <div>
             <h1 style={{ margin: 0, fontSize: '14px', letterSpacing: '.12em', textTransform: 'uppercase', lineHeight: 1.2 }}>YellowMeter OS</h1>
             <span className="sub" style={{ display: 'block', marginTop: '3px', fontSize: '12px', letterSpacing: '.06em', color: 'var(--muted)', textTransform: 'none' }}>
