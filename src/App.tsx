@@ -2,6 +2,7 @@ import { Layout } from './components/layout/Layout';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { Preloader } from './components/layout/Preloader';
+import { ReactBitsHyperspeed } from './components/3d/ReactBitsHyperspeed';
 import { Card } from './components/ui/Card';
 import { Button } from './components/ui/Button';
 import { AnimatedText, FadeInUp } from './components/ui/AnimatedText';
@@ -37,6 +38,19 @@ function App() {
   return (
     <>
       <Preloader />
+      <ReactBitsHyperspeed 
+        roadSpeed={1.5}
+        roadWidth={10}
+        islandWidth={2}
+        fov={90}
+        colors={{
+          shoulderLines: 0xffe600,
+          brokenLines: 0xffe600,
+          roadColor: 0x0a0a0a,
+          islandColor: 0x050505,
+          background: 0x000000
+        }}
+      />
       <Layout>
         <Header />
       
