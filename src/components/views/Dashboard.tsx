@@ -1,0 +1,89 @@
+import { useState } from 'react';
+import { Bot, Code2, Trophy, CandlestickChart } from 'lucide-react';
+import { DashboardCard } from '../ui/DashboardCard';
+import { useSession } from '../../context/SessionContext';
+import { DepositModal } from '../modals/DepositModal';
+import { ChessModal } from '../modals/ChessModal';
+
+export function Dashboard() {
+  const { isChannelOpen } = useSession();
+  const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isChessModalOpen, setIsChessModalOpen] = useState(false);
+
+  const handleAppClick = (appName: string) => {
+    if (!isChannelOpen) {
+      setIsDepositModalOpen(true);
+      return;
+    }
+    
+    if (appName === 'Chess') {
+        setIsChessModalOpen(true);
+    }
+    // Add other apps here
+  };
+
+  return (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl mx-auto px-4">
+        
+        {/* 1. AI Inference */}
+        <DashboardCard
+          title="AI Inference"
+          price="$0.02"
+          description="Solicita una respuesta a un modelo de IA (LLM) pagando por uso exacto."
+          whyYellow="Hoy pagar $0.02 costaría $5+ de gas en Ethereum. Aquí el gas es $0."
+          buttonText="Abrir Chat"
+          icon={<Bot size={24} />}
+          onClick={() => handleAppClick('AI')}
+        />
+
+        {/* 2. Micro-API */}
+        <DashboardCard
+          title="Micro-API"
+          price="$0.005"
+          description="Compra un dato en tiempo real (Precio ETH, Clima, Sport score)."
+          whyYellow="Los micropagos reales son imposibles en L1 por las fees. Aquí son viables."
+          buttonText="Abrir Consola API"
+          icon={<Code2 size={24} />}
+          onClick={() => handleAppClick('API')}
+        />
+
+        {/* 3. P2P Betting */}
+        <DashboardCard
+          title="P2P Betting"
+          badge="Wager"
+          description="Juega Ajedrez apostando USDC. Movimientos off-chain gratuitos (solo firmas)."
+          whyYellow="Solo pagas gas al liquidar al ganador. La partida ocurre enteramente off-chain."
+          buttonText="Iniciar Apuesta"
+          icon={<Trophy size={24} />}
+          onClick={() => handleAppClick('Chess')}
+        />
+
+        {/* 4. Yellow DEX (Full Width) */}
+        <div className="md:col-span-3">
+          <DashboardCard
+              className="h-auto"
+              variant="highlight"
+              title="Yellow DEX"
+              badge="Perps"
+              description="Futuros Perpetuos con libro de órdenes 100% On-Chain pero con UX de Off-Chain."
+              whyYellow="Zero-Block-Time trading. Actualizaciones de precio cada 100ms sin espera de confirmación de bloque."
+              buttonText="Launch Terminal"
+              icon={<CandlestickChart size={24} />}
+              onClick={() => handleAppClick('Trading')}
+          />
+        </div>
+      </div>
+
+      <DepositModal 
+        isOpen={isDepositModalOpen} 
+        onClose={() => setIsDepositModalOpen(false)} 
+      />
+      
+      <ChessModal
+        isOpen={isChessModalOpen}
+        onClose={() => setIsChessModalOpen(false)}
+      />
+    </>
+  );
+}
