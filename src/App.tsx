@@ -24,7 +24,7 @@ function MainLayout() {
         {/* Reuse the hyperspeed background but maybe slower or dimmed? or just dark bg */}
         <div style={{ position: 'fixed', inset: 0, zIndex: 0, opacity: 0.2 }}>
             <ReactBitsHyperspeed 
-            roadSpeed={0.5}
+            roadSpeed={0.2}
             roadWidth={10}
             islandWidth={2}
             fov={90}
@@ -74,7 +74,7 @@ function MainLayout() {
     <>
       <div style={{ position: 'fixed', inset: 0, zIndex: 0 }}>
         <ReactBitsHyperspeed 
-          roadSpeed={1.5}
+          roadSpeed={0.8}
           roadWidth={10}
           islandWidth={2}
           fov={90}
