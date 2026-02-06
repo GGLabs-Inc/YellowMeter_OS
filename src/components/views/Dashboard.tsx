@@ -6,6 +6,8 @@ import { DepositModal } from '../modals/DepositModal';
 import { ChessModal } from '../modals/ChessModal';
 import { AiChatModal } from '../modals/AiChatModal';
 import { MicroApiModal } from '../modals/MicroApiModal';
+import { GamesHubModal } from '../modals/GamesHubModal';
+import { TradingModal } from '../modals/TradingModal';
 
 export function Dashboard() {
   const { isChannelOpen } = useSession();
@@ -13,6 +15,9 @@ export function Dashboard() {
   const [isChessModalOpen, setIsChessModalOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
+  const [isGamesHubOpen, setIsGamesHubOpen] = useState(false);
+  const [isTradingModalOpen, setIsTradingModalOpen] = useState(false);
+  const [selectedStake, setSelectedStake] = useState(10);
 
   const handleAppClick = (appName: string) => {
     if (!isChannelOpen) {
@@ -21,12 +26,21 @@ export function Dashboard() {
     }
     
     if (appName === 'Chess') {
-        setIsChessModalOpen(true);
+        setIsGamesHubOpen(true);
     } else if (appName === 'AI') {
         setIsAiModalOpen(true);
     } else if (appName === 'API') {
         setIsApiModalOpen(true);
+    } else if (appName === 'Trading') {
+        setIsTradingModalOpen(true);
     }
+  };
+
+  const handleStartGame = (gameId: string, stake: number) => {
+      console.log(`Starting ${gameId} with stake ${stake}`);
+      setSelectedStake(stake);
+      setIsGamesHubOpen(false);
+      setIsChessModalOpen(true);
   };
 
   return (
@@ -90,6 +104,7 @@ export function Dashboard() {
       <ChessModal
         isOpen={isChessModalOpen}
         onClose={() => setIsChessModalOpen(false)}
+        stake={selectedStake}
       />
 
       <AiChatModal
@@ -100,6 +115,17 @@ export function Dashboard() {
       <MicroApiModal
         isOpen={isApiModalOpen}
         onClose={() => setIsApiModalOpen(false)}
+      />
+
+      <GamesHubModal
+        isOpen={isGamesHubOpen}
+        onClose={() => setIsGamesHubOpen(false)}
+        onStartGame={handleStartGame}
+      />
+
+      <TradingModal
+        isOpen={isTradingModalOpen}
+        onClose={() => setIsTradingModalOpen(false)}
       />
     </>
   );
