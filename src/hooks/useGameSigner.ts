@@ -17,6 +17,11 @@ const types = {
     { name: 'move', type: 'string' },
     { name: 'nonce', type: 'uint256' },
   ],
+  ApiRequest: [
+    { name: 'endpoint', type: 'string' },
+    { name: 'timestamp', type: 'uint256' },
+    { name: 'nonce', type: 'uint256' },
+  ],
 } as const;
 
 export function useGameSigner() {
@@ -60,5 +65,35 @@ export function useGameSigner() {
     }
   };
 
-  return { signMove };
+  const signApiRequest = async (endpoint: string, timestamp: number, nonce: number) => {
+    try {
+      if (sessionAccount) {
+        return await sessionAccount.signTypedData({
+          domain,
+          types,
+          primaryType: 'ApiRequest',
+          message: {
+            endpoint,
+            timestamp: BigInt(timestamp),
+            nonce: BigInt(nonce),
+          }
+        });
+      }
+      return await signTypedDataAsync({
+        domain,
+        types,
+        primaryType: 'ApiRequest',
+        message: {
+          endpoint,
+          timestamp: BigInt(timestamp),
+          nonce: BigInt(nonce),
+        }
+      });
+    } catch (error) {
+      console.error("Error signing API request:", error);
+      throw error;
+    }
+  };
+
+  return { signMove, signApiRequest };
 }

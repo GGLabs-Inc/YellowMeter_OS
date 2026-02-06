@@ -5,12 +5,14 @@ import { useSession } from '../../context/SessionContext';
 import { DepositModal } from '../modals/DepositModal';
 import { ChessModal } from '../modals/ChessModal';
 import { AiChatModal } from '../modals/AiChatModal';
+import { MicroApiModal } from '../modals/MicroApiModal';
 
 export function Dashboard() {
   const { isChannelOpen } = useSession();
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
   const [isChessModalOpen, setIsChessModalOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+  const [isApiModalOpen, setIsApiModalOpen] = useState(false);
 
   const handleAppClick = (appName: string) => {
     if (!isChannelOpen) {
@@ -22,8 +24,9 @@ export function Dashboard() {
         setIsChessModalOpen(true);
     } else if (appName === 'AI') {
         setIsAiModalOpen(true);
+    } else if (appName === 'API') {
+        setIsApiModalOpen(true);
     }
-    // Add other apps here
   };
 
   return (
@@ -92,6 +95,11 @@ export function Dashboard() {
       <AiChatModal
         isOpen={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
+      />
+
+      <MicroApiModal
+        isOpen={isApiModalOpen}
+        onClose={() => setIsApiModalOpen(false)}
       />
     </>
   );
