@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { type LocalAccount } from 'viem';
 
 interface SessionLog {
   action: string;
@@ -13,8 +15,10 @@ interface SessionContextType {
   initialDeposit: number;
   actionsCount: number;
   logs: SessionLog[];
+  sessionAccount: LocalAccount | null;
   // Actions
   openChannel: (amount: number) => void;
+
   closeChannel: () => void;
   addLog: (action: string, cost: number, signature?: string) => void;
 }
@@ -27,8 +31,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [initialDeposit, setInitialDeposit] = useState(0);
   const [actionsCount, setActionsCount] = useState(0);
   const [logs, setLogs] = useState<SessionLog[]>([]);
+  const [sessionAccount, setSessionAccount] = useState<LocalAccount | null>(null);
 
   const openChannel = (amount: number) => {
+    // Generate ephemeral key for this session
+    const pKey = generatePrivateKey();
+    const account = privateKeyToAccount(pKey);
+    setSessionAccount(account);
+    console.log("⚡ Session Key Generated:", account.address);
+
     setInitialDeposit(amount);
     setBalance(amount);
     setIsChannelOpen(true);
@@ -39,6 +50,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const closeChannel = () => {
     // Here we would trigger the blockchain settlement
     setIsChannelOpen(false);
+    setSessionAccount(null);
   };
 
   const addLog = (action: string, cost: number, signature: string = '0x...') => {
@@ -62,6 +74,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       initialDeposit,
       actionsCount,
       logs,
+      sessionAccount,
       openChannel,
       closeChannel,
       addLog

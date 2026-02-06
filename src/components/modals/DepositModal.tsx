@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSignMessage } from 'wagmi';
 import { Modal } from '../ui/Modal';
 import { useSession } from '../../context/SessionContext';
 import { Info, Lock } from 'lucide-react';
@@ -10,18 +11,30 @@ interface DepositModalProps {
 
 export function DepositModal({ isOpen, onClose }: DepositModalProps) {
   const { openChannel } = useSession();
+  const { signMessageAsync } = useSignMessage();
   const [amount, setAmount] = useState('100.00');
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleDeposit = async () => {
     setIsProcessing(true);
     
-    // Simulate wallet signature and blockchain delay
-    setTimeout(() => {
+    try {
+        // 1. Force the user to sign (Authentication / Deposit Authorization)
+        const message = `Authorize Deposit: ${amount} USDC to Yellow SessionSafe.\n\nNonce: ${Date.now()}`;
+        console.log("📝 Requesting User Signature for Deposit...");
+        
+        await signMessageAsync({ message });
+        
+        // 2. If signature succeeds, open the channel (generate session key)
+        console.log("✅ Signature valid. Opening Channel...");
         openChannel(parseFloat(amount));
-        setIsProcessing(false);
+        
         onClose();
-    }, 2000);
+    } catch (error) {
+        console.error("❌ Deposit Cancelled/Action Rejected", error);
+    } finally {
+        setIsProcessing(false);
+    }
   };
 
   return (

@@ -3,6 +3,7 @@ import { Chess } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
 import { Modal } from '../ui/Modal';
 import { useSession } from '../../context/SessionContext';
+import { useGameSigner } from '../../hooks/useGameSigner';
 import { ScrollText } from 'lucide-react';
 
 interface ChessModalProps {
@@ -12,8 +13,11 @@ interface ChessModalProps {
 
 export function ChessModal({ isOpen, onClose }: ChessModalProps) {
   const { addLog, logs, balance } = useSession();
+  const { signMove } = useGameSigner();
   const [game, setGame] = useState(new Chess());
   const [gameStatus, setGameStatus] = useState<'SETUP' | 'PLAYING'>('SETUP');
+  // Temporary nonce tracker
+  const [nonce, setNonce] = useState(0);
   
   // Reset game when opening
   useEffect(() => {
@@ -58,20 +62,25 @@ export function ChessModal({ isOpen, onClose }: ChessModalProps) {
 
     if (!move) return false;
 
-    // Update real state
+    // Async signature
+    const currentNonce = nonce;
+    // We update the board optimistically
     safeGameMutate((g) => {
-        g.move({
-          from: sourceSquare,
-          to: targetSquare,
-          promotion: 'q',
-        });
+        g.move({ from: sourceSquare, to: targetSquare, promotion: 'q' });
     });
 
-    // Log the signed action
-    addLog(`MOVE: ${sourceSquare} -> ${targetSquare}`, 0.00, `0x${Math.random().toString(16).slice(2)}...`);
-    
-    // Simulate Opponent Reply
-    setTimeout(makeRandomMove, 500);
+    signMove("demo-game-id", move.san, currentNonce).then(signature => {
+        if(signature) {
+             addLog(`MOVE: ${move.san}`, 0.00, signature.slice(0, 10) + '...');
+             setNonce(prev => prev + 1);
+             // Simulate Reply
+             setTimeout(makeRandomMove, 500);
+        } else {
+            // Revert if rejected
+            safeGameMutate(g => g.undo());
+        }
+    });
+
     return true;
   }
 
@@ -90,8 +99,15 @@ export function ChessModal({ isOpen, onClose }: ChessModalProps) {
         g.move(randomMove);
     });
     
-    addLog(`MOVE: ${randomMove}`, 0.00, `0x${Math.random().toString(16).slice(2)}...`);
-    setTimeout(makeRandomMove, 500);
+    signMove("demo-game-id", randomMove, nonce).then(signature => {
+        if(signature) {
+             addLog(`MOVE: ${randomMove}`, 0.00, signature.slice(0, 10) + '...');
+             setNonce(prev => prev + 1);
+             setTimeout(makeRandomMove, 500);
+        } else {
+             safeGameMutate(g => g.undo());
+        }
+    });
   };
 
   return (
