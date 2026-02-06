@@ -420,27 +420,40 @@ export default function CinematicOverlay() {
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             {/* Wall SVG */}
             <div className="flex justify-center">
-              <svg viewBox="0 0 320 280" className="w-full max-w-sm" aria-label="Gas barrier illustration showing micro-transactions being blocked by high fees">
-                <rect x="140" y="20" width="20" height="240" rx="4" fill="hsl(220,10%,16%)" stroke="hsl(220,10%,25%)" />
-                <text x="150" y="150" textAnchor="middle" fill="hsl(220,10%,40%)" fontSize="8" fontWeight="bold" transform="rotate(-90 150 150)">
-                  GAS BARRIER
-                </text>
-                {[40, 80, 120, 160, 200].map((y, i) => (
-                  <g key={y}>
-                    <circle cx="60" cy={y} r="10" fill={`hsl(48,96%,53%,${0.3 + i * 0.12})`} />
-                    <line x1="72" y1={y} x2="130" y2={y} stroke="hsl(48,96%,53%,0.15)" strokeDasharray="4 4" />
-                    <text x="60" y={y + 3} textAnchor="middle" fill="hsl(220,15%,5%)" fontSize="7" fontWeight="700">
-                      TX
-                    </text>
-                    <text x="200" y={y + 3} textAnchor="middle" fill="hsl(0,72%,51%)" fontSize="7">
-                      {"$0.05-$50"}
-                    </text>
-                  </g>
-                ))}
-                <text x="260" y="260" textAnchor="middle" fill="hsl(0,72%,51%)" fontSize="11" fontWeight="600">
-                  $47.20 wasted
-                </text>
-              </svg>
+              <div className="glass-strong rounded-xl p-8 border border-destructive/20 shadow-lg shadow-destructive/5">
+                <svg viewBox="0 0 320 280" className="w-full max-w-sm" aria-label="Gas barrier illustration showing micro-transactions being blocked by high fees">
+                  {/* Barrier wall */}
+                  <rect x="140" y="20" width="20" height="240" rx="4" fill="hsl(220,10%,20%)" stroke="hsl(220,10%,35%)" strokeWidth="2" />
+                  <text x="150" y="150" textAnchor="middle" fill="hsl(220,10%,70%)" fontSize="11" fontWeight="bold" transform="rotate(-90 150 145)">
+                    GAS BARRIER
+                  </text>
+                  
+                  {/* Transactions hitting the barrier */}
+                  {[40, 80, 120, 160, 200].map((y, i) => (
+                    <g key={y}>
+                      {/* Outer glow */}
+                      <circle cx="60" cy={y} r="12" fill={`hsl(48,96%,53%,${0.2 + i * 0.08})`} />
+                      {/* Main circle */}
+                      <circle cx="60" cy={y} r="10" fill={`hsl(48,96%,53%,${0.6 + i * 0.08})`} stroke="hsl(48,96%,53%)" strokeWidth="1" />
+                      {/* Transaction line */}
+                      <line x1="72" y1={y} x2="130" y2={y} stroke="hsl(48,96%,53%,0.4)" strokeWidth="1.5" strokeDasharray="4 4" />
+                      {/* TX label */}
+                      <text x="60" y={y + 4} textAnchor="middle" fill="hsl(220,15%,5%)" fontSize="10" fontWeight="800">
+                        TX
+                      </text>
+                      {/* Cost label with better visibility */}
+                      <text x="200" y={y + 4} textAnchor="middle" fill="hsl(0,72%,60%)" fontSize="11" fontWeight="800">
+                        {"$0.05-$50"}
+                      </text>
+                    </g>
+                  ))}
+                  
+                  {/* Wasted amount - more prominent */}
+                  <text x="260" y="260" textAnchor="middle" fill="hsl(0,72%,60%)" fontSize="15" fontWeight="800">
+                    $47.20 wasted
+                  </text>
+                </svg>
+              </div>
             </div>
 
             {/* Problem cards */}
