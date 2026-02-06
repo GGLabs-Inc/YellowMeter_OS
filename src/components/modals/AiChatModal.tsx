@@ -1,9 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Modal } from '../ui/Modal';
 import { useSession } from '../../context/SessionContext';
-import { Send, Bot, Cpu, ChevronDown, Check, Settings2 } from 'lucide-react';
+import { Send, Bot, Cpu, ChevronDown, Check, Settings2, Loader2 } from 'lucide-react';
+import { useAccount, useSignMessage } from 'wagmi';
+import { getAiChatService } from '../../services/aiChatService';
 
 interface AiChatModalProps {
   isOpen: boolean;
@@ -76,16 +78,34 @@ const MODEL_GROUPS: ModelGroup[] = [
 const ALL_MODELS = MODEL_GROUPS.flatMap(g => g.items);
 
 export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
-  const { addLog, balance, actionsCount } = useSession();
+  const { addLog, balance } = useSession();
+  const { address } = useAccount();
+  const { signMessageAsync } = useSignMessage();
+  const aiService = useRef(getAiChatService());
+
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', sender: 'bot', text: 'Hola, soy YellowBot. Paga por uso para chatear conmigo.' }
+    { id: '1', sender: 'bot', text: 'Hola, soy YellowBot. Conectando con Yellow Network...' }
   ]);
   const [inputText, setInputText] = useState('');
   const [selectedModel, setSelectedModel] = useState(ALL_MODELS.find(m => m.id === 'gemini-3-pro') || ALL_MODELS[0]);
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  
+  // Yellow Network state
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [channelBalance, setChannelBalance] = useState<string>('0');
+  const [nonce, setNonce] = useState<number>(0);
+  const [isConnected, setIsConnected] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Wrapper para signMessageAsync compatible con el servicio
+  const signMessage = async (message: string): Promise<string> => {
+    if (!signMessageAsync) throw new Error('Sign message not available');
+    return await signMessageAsync({ message });
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -106,8 +126,112 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Initialize session when modal opens
+  const initializeSession = useCallback(async () => {
+    if (!address || !signMessageAsync || isInitializing) return;
+
+    setIsInitializing(true);
+    setMessages([{ 
+      id: Date.now().toString(), 
+      sender: 'bot', 
+      text: '🔄 Inicializando sesión en Yellow Network...' 
+    }]);
+
+    try {
+      // 1. Crear sesión (abrir state channel)
+      const depositAmount = (100 * 1e6).toString(); // 100 USDC en formato micro
+      const session = await aiService.current.createSession(address, depositAmount);
+      
+      console.log('✅ Session created:', session.sessionId);
+      setSessionId(session.sessionId);
+      setChannelBalance(session.balance);
+      setNonce(session.nonce);
+
+      setMessages([{ 
+        id: Date.now().toString(), 
+        sender: 'bot', 
+        text: '✅ Sesión creada. Configurando session key...' 
+      }]);
+
+      // 2. Crear session key
+      const sessionKey = await aiService.current.createSessionKey(
+        session.sessionId,
+        address,
+        signMessage
+      );
+      
+      console.log('✅ Session key created:', sessionKey);
+
+      // 3. Conectar WebSocket
+      aiService.current.connectWebSocket(session.sessionId, {
+        onConnect: () => {
+          setIsConnected(true);
+          setMessages([{ 
+            id: Date.now().toString(), 
+            sender: 'bot', 
+            text: '✅ Conectado a Yellow Network! Puedes empezar a chatear.\n\n💰 Balance inicial: ' + 
+                  (parseFloat(session.balance) / 1e6).toFixed(2) + ' USDC' 
+          }]);
+        },
+        onBalanceUpdate: (data) => {
+          console.log('💰 Balance update:', data);
+          setChannelBalance(data.balance);
+          setNonce(data.nonce);
+        },
+        onError: (error) => {
+          console.error('❌ WebSocket Error:', error);
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            sender: 'bot',
+            text: `❌ Error: ${error.message || 'Connection error'}`
+          }]);
+        },
+      });
+
+      addLog('AI_SESSION_CREATED', 0.00, session.sessionId.slice(0, 10));
+      setIsInitializing(false);
+
+    } catch (error) {
+      console.error('Error initializing session:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      setMessages([{ 
+        id: Date.now().toString(), 
+        sender: 'bot', 
+        text: `❌ Error al inicializar: ${errorMessage}\n\nIntenta recargar el modal.` 
+      }]);
+      setIsInitializing(false);
+    }
+  }, [address, signMessageAsync, isInitializing, addLog, signMessage]);
+
+  useEffect(() => {
+    if (isOpen && address && signMessageAsync && !sessionId && !isInitializing) {
+      initializeSession();
+    }
+
+    // Cleanup on close
+    return () => {
+      if (!isOpen) {
+        const service = aiService.current;
+        service.disconnect();
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, address, initializeSession]);
+
+  /**
+   * 💬 ENVIAR MENSAJE A IA
+   */
   const handleSend = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !sessionId || !signMessageAsync || !address) {
+      if (!sessionId) {
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          sender: 'bot',
+          text: '⚠️ Por favor espera a que se inicialice la sesión.'
+        }]);
+      }
+      return;
+    }
 
     // 1. Add User Message
     const userText = inputText;
@@ -119,76 +243,81 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
     setMessages(prev => [...prev, userMsg]);
     setInputText('');
     setIsThinking(true);
-    
-    // 2. Log Payment (Off-chain signature simulation)
-    addLog(`AI_QUERY: ${selectedModel.id}`, selectedModel.cost, `0x${Math.random().toString(16).slice(2)}...`);
-    
-    try {
-        // 3. Call Deepseek API
-        const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY;
-        
-        const response = await fetch('https://api.deepseek.com/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: "deepseek-chat", // Deepseek API only supports its own models
-                messages: [
-                    { 
-                        role: "system", 
-                        content: `You are YellowBot, an AI assistant inside a Web3 State Channel OS. 
-                        The user selected the model "${selectedModel.name}". 
-                        Please answer succinctly and helpfully.` 
-                    },
-                    ...messages.map(m => ({ 
-                        role: m.sender === 'user' ? 'user' : 'assistant', 
-                        content: m.text 
-                    })),
-                    { role: "user", content: userText }
-                ],
-                stream: false
-            })
-        });
 
-        const data = await response.json();
-        
-        if (data.choices && data.choices[0]) {
-             const botMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                sender: 'bot',
-                text: data.choices[0].message.content
-            };
-            setMessages(prev => [...prev, botMsg]);
-        } else {
-             console.error("Deepseek API Error:", data);
-             const errorMsg: Message = {
-                id: Date.now().toString(),
-                sender: 'bot',
-                text: "Error conectando con Deepseek API. Revisa la consola."
-             };
-             setMessages(prev => [...prev, errorMsg]);
-        }
+    try {
+      // 2. Prepare and send query
+      const maxCost = (selectedModel.cost * 1e6).toString(); // Convert to micro USDC
+
+      const result = await aiService.current.query(
+        sessionId,
+        nonce,
+        selectedModel.id,
+        userText,
+        maxCost,
+        signMessage
+      );
+
+      // 3. Add Bot Response
+      const botMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        sender: 'bot',
+        text: result.response
+      };
+      setMessages(prev => [...prev, botMsg]);
+
+      // 4. Update state
+      setChannelBalance(result.newState.balance);
+      setNonce(result.newState.nonce);
+
+      // 5. Log transaction
+      const signature = `0x${Math.random().toString(16).slice(2, 12)}`;
+      addLog(`AI_QUERY: ${selectedModel.id}`, selectedModel.cost, signature);
 
     } catch (error) {
-        console.error("Fetch Error:", error);
-         const errorMsg: Message = {
-            id: Date.now().toString(),
-            sender: 'bot',
-            text: "Error de red al conectar con la IA."
-         };
-         setMessages(prev => [...prev, errorMsg]);
+      console.error("Query Error:", error);
+      const errorMessage = error instanceof Error ? error.message : 'No pude procesar tu consulta';
+      const errorMsg: Message = {
+        id: Date.now().toString(),
+        sender: 'bot',
+        text: `❌ Error: ${errorMessage}. Intenta de nuevo.`
+      };
+      setMessages(prev => [...prev, errorMsg]);
     } finally {
-        setIsThinking(false);
+      setIsThinking(false);
     }
   };
+
+  /**
+   * 🔒 CERRAR SESIÓN
+   */
+  async function handleCloseSession() {
+    if (!sessionId || !address || !signMessageAsync) {
+      onClose();
+      return;
+    }
+
+    try {
+      setIsThinking(true);
+      await aiService.current.closeSession(sessionId, address, signMessage);
+      console.log('✅ Session closed');
+      addLog('AI_SESSION_CLOSED', 0.00, sessionId.slice(0, 10));
+      setSessionId(null);
+      setIsConnected(false);
+      onClose();
+    } catch (error) {
+      console.error('Error closing session:', error);
+      // Close anyway
+      onClose();
+    } finally {
+      setIsThinking(false);
+    }
+  }
 
   return (
     <Modal 
         isOpen={isOpen} 
-        onClose={onClose} 
-        title="AI Chat Gateway" 
+        onClose={handleCloseSession} 
+        title="AI Chat Gateway - Yellow Network" 
         className="max-w-4xl"
     >
       {/* Header Status */}
@@ -196,18 +325,28 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
         {/* Real-time Stats */}
         <div className="flex gap-6">
             <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Balance Real</span>
+                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Balance Wallet</span>
                 <span className="text-white font-mono font-bold text-sm">{balance.toFixed(4)} USDC</span>
             </div>
             <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Firmas</span>
-                <span className="text-yellow-500 font-mono font-bold text-sm">{actionsCount}</span>
+                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Balance Canal</span>
+                <span className="text-yellow-500 font-mono font-bold text-sm">
+                  {(parseFloat(channelBalance) / 1e6).toFixed(4)} USDC
+                </span>
+            </div>
+            <div className="flex flex-col">
+                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Consultas</span>
+                <span className="text-blue-500 font-mono font-bold text-sm">{nonce}</span>
             </div>
         </div>
 
-        <div className="text-xs text-gray-500 font-mono flex items-center gap-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            ONLINE
+        <div className={`text-xs font-mono flex items-center gap-2 px-3 py-1.5 rounded-md ${
+          isConnected 
+            ? 'bg-green-500/10 text-green-500 border border-green-500/30' 
+            : 'bg-gray-500/10 text-gray-500 border border-gray-500/30'
+        }`}>
+            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></span>
+            {isConnected ? 'CHANNEL OPEN' : 'CONNECTING...'}
         </div>
       </div>
 
@@ -243,8 +382,16 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             {isThinking && (
                  <div className="flex justify-start">
                     <div className="bg-[#1a1d24] border border-yellow-500/20 text-gray-200 rounded-2xl rounded-bl-none p-3 text-sm flex items-center gap-2">
-                        <Bot size={12} className="text-yellow-500" />
-                        <span className="text-gray-400 text-xs animate-pulse">Thinking...</span>
+                        <Loader2 size={12} className="text-yellow-500 animate-spin" />
+                        <span className="text-gray-400 text-xs">Procesando con {selectedModel.name}...</span>
+                    </div>
+                 </div>
+            )}
+            {isInitializing && (
+                 <div className="flex justify-start">
+                    <div className="bg-[#1a1d24] border border-blue-500/20 text-gray-200 rounded-2xl rounded-bl-none p-3 text-sm flex items-center gap-2">
+                        <Loader2 size={12} className="text-blue-500 animate-spin" />
+                        <span className="text-gray-400 text-xs">Inicializando Yellow Network...</span>
                     </div>
                  </div>
             )}
@@ -317,9 +464,10 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                         type="text"
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder="Escribe tu consulta..."
-                        className="w-full bg-[#15171e] text-white border border-white/10 rounded-lg pl-4 pr-32 py-2 text-sm focus:outline-none focus:border-yellow-500/50 transition-colors placeholder-gray-600 h-full"
+                        onKeyDown={(e) => e.key === 'Enter' && !isThinking && isConnected && handleSend()}
+                        placeholder={isConnected ? "Escribe tu consulta..." : "Esperando conexión..."}
+                        disabled={!isConnected || isThinking || isInitializing}
+                        className="w-full bg-[#15171e] text-white border border-white/10 rounded-lg pl-4 pr-32 py-2 text-sm focus:outline-none focus:border-yellow-500/50 transition-colors placeholder-gray-600 h-full disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 text-gray-400 text-[10px] px-2 py-1 rounded border border-white/5">
@@ -329,10 +477,20 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             </div>
              <button
                     onClick={handleSend}
-                    className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+                    disabled={!isConnected || isThinking || isInitializing || !inputText.trim()}
+                    className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-yellow-400"
                 >
-                    <span>Enviar</span>
-                    <Send size={16} />
+                    {isThinking ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Procesando...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Enviar</span>
+                        <Send size={16} />
+                      </>
+                    )}
                 </button>
         </div>
       </div>
