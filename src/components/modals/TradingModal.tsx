@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Modal } from '../ui/Modal';
 import { useSession } from '../../context/SessionContext';
-import { ArrowUpRight, ArrowDownLeft, TrendingUp, Activity, Clock, Wallet, BookOpen } from 'lucide-react';
+import { ArrowUpRight, Activity, BookOpen } from 'lucide-react';
 
 interface TradingModalProps {
   isOpen: boolean;
