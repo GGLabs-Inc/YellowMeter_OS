@@ -165,9 +165,19 @@ export default function CinematicOverlay() {
     const isSessionStage = sessionStages.includes(activeStage);
 
     if (isSessionStage) {
-      setMeter((prev) => ({ ...prev, sessionActive: true }));
-
       if (meterIntervalRef.current) clearInterval(meterIntervalRef.current);
+      
+      // Use setTimeout to avoid synchronous setState in effect
+      const initialTimeout = setTimeout(() => {
+        setMeter((prev) => ({ 
+          ...prev, 
+          sessionActive: true,
+          events: prev.events + uc.eventsPerTick,
+          cost: prev.cost + uc.eventsPerTick * uc.rate,
+          savings: prev.savings + (uc.eventsPerTick * 0.0472 - uc.eventsPerTick * uc.rate)
+        }));
+      }, 0);
+      
       meterIntervalRef.current = setInterval(() => {
         setMeter((prev) => {
           const newEvents = prev.events + uc.eventsPerTick;
@@ -182,17 +192,23 @@ export default function CinematicOverlay() {
           };
         });
       }, 2500);
+      
+      return () => {
+        clearTimeout(initialTimeout);
+        if (meterIntervalRef.current) clearInterval(meterIntervalRef.current);
+      };
     } else {
-      setMeter((prev) => ({ ...prev, sessionActive: false }));
       if (meterIntervalRef.current) {
         clearInterval(meterIntervalRef.current);
         meterIntervalRef.current = null;
       }
+      // Use setTimeout to avoid synchronous setState in effect
+      const timeout = setTimeout(() => {
+        setMeter((prev) => ({ ...prev, sessionActive: false }));
+      }, 0);
+      
+      return () => clearTimeout(timeout);
     }
-
-    return () => {
-      if (meterIntervalRef.current) clearInterval(meterIntervalRef.current);
-    };
   }, [activeStage, activeUsecase]);
 
   const isVisible = (stage: string) => visibleStages.has(stage);
