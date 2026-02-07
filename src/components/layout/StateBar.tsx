@@ -33,7 +33,7 @@ export function StateBar({ onSettle }: StateBarProps) {
                     BALANCE EN TIEMPO REAL
                 </span>
                 <span className="text-2xl font-mono font-bold text-white tracking-tight">
-                    {balance.toFixed(4)} <span className="text-sm font-sans text-gray-400">USDC</span>
+                    {balance.toFixed(2)} <span className="text-sm font-sans text-gray-400">USDC</span>
                 </span>
             </div>
 

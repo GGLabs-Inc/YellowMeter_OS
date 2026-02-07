@@ -2,8 +2,9 @@ export const BACKEND_URL = 'http://localhost:3000';
 export const WS_URL = 'http://localhost:3000';
 
 export const CONTRACTS = {
-  MockUSDC: '0x6dE0e73966474a1564d5E582e833E7B296a46D1F',
-  SessionSafe: '0x4e4E5c6c5A5ED45D437FAf7279fAC23D24e48890',
+  USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238', // Sepolia USDC Faucet
+  Adjudicator: '0x019B65A265EB3363822f2752141b3dF16131b262', // Yellow Network Sepolia Custody
+  ServerWallet: '0x5C18Cb1245bdca02289e1c1f209846D245d4135C', // Backend Treasury
 } as const;
 
 export const CHAIN_ID = 11155111; // Sepolia

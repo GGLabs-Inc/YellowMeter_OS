@@ -1,8 +1,10 @@
-import { useState } from 'react';
-import { useSignMessage } from 'wagmi';
+import { useState, useEffect } from 'react';
+import { useWriteContract, usePublicClient, useAccount } from 'wagmi';
+import { parseUnits, parseAbi } from 'viem';
 import { Modal } from '../ui/Modal';
 import { useSession } from '../../context/SessionContext';
-import { Info, Lock } from 'lucide-react';
+import { Info, Lock, Loader2 } from 'lucide-react';
+import { CONTRACTS } from '../../config/constants';
 
 interface DepositModalProps {
   isOpen: boolean;
@@ -11,29 +13,82 @@ interface DepositModalProps {
 
 export function DepositModal({ isOpen, onClose }: DepositModalProps) {
   const { openChannel } = useSession();
-  const { signMessageAsync } = useSignMessage();
-  const [amount, setAmount] = useState('100.00');
+  const { address } = useAccount();
+  
+  // Wagmi Hooks
+  const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient();
+  
+  const [amount, setAmount] = useState('10.00');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [step, setStep] = useState<'idle' | 'approving' | 'depositing' | 'confirming'>('idle');
+  const [progress, setProgress] = useState(0);
+
+  // Simple progress animation effect
+  useEffect(() => {
+    if (step === 'approving') setProgress(25);
+    if (step === 'depositing') setProgress(60);
+    if (step === 'confirming') setProgress(90);
+    if (step === 'idle') setProgress(0);
+  }, [step]);
 
   const handleDeposit = async () => {
+    if (!publicClient || !address) {
+        alert("Wallet not connected");
+        return;
+    }
+    
     setIsProcessing(true);
+    setStep('approving');
     
     try {
-        // 1. Force the user to sign (Authentication / Deposit Authorization)
-        const message = `Authorize Deposit: ${amount} USDC to Yellow SessionSafe.\n\nNonce: ${Date.now()}`;
-        console.log("📝 Requesting User Signature for Deposit...");
+        const amountUnits = parseUnits(amount, 6); // USDC has 6 decimals
+
+        // 1. APPROVE (USDC -> Adjudicator)
+        console.log("📝 Approving USDC spending...");
+        const approveHash = await writeContractAsync({
+            address: CONTRACTS.USDC as `0x${string}`,
+            abi: parseAbi(['function approve(address spender, uint256 amount) returns (bool)']),
+            functionName: 'approve',
+            args: [CONTRACTS.Adjudicator as `0x${string}`, amountUnits],
+        });
+        console.log("Tx Hash (Approve):", approveHash);
         
-        await signMessageAsync({ message });
+        // Wait for confirmation
+        await publicClient.waitForTransactionReceipt({ hash: approveHash });
+        console.log("✅ Approve Confirmed");
         
-        // 2. If signature succeeds, open the channel (generate session key)
-        console.log("✅ Signature valid. Opening Channel...");
+        setStep('depositing');
+
+        // 2. DEPOSIT (Adjudicator.deposit)
+        // Correct Signature: deposit(address account, address token, uint256 amount)
+        console.log("💰 Depositing Funds for:", address);
+        const depositHash = await writeContractAsync({
+            address: CONTRACTS.Adjudicator as `0x${string}`,
+            abi: parseAbi(['function deposit(address account, address token, uint256 amount) payable']),
+            functionName: 'deposit',
+            args: [address, CONTRACTS.USDC as `0x${string}`, amountUnits]
+        }); 
+        
+        console.log("Tx Hash (Deposit):", depositHash);
+        setStep('confirming');
+        
+        await publicClient.waitForTransactionReceipt({ hash: depositHash });
+        console.log("✅ Deposit Confirmed");
+        setProgress(100);
+        
+        // 3. Update Session State (Optimistic update for UI)
         openChannel(parseFloat(amount));
+        setTimeout(onClose, 1000); // Close after 1s success
         
-        onClose();
     } catch (error) {
-        console.error("❌ Deposit Cancelled/Action Rejected", error);
+        console.error("❌ On-Chain Transaction Failed", error);
+        alert("Transaction Failed: " + (error as any).message);
     } finally {
-        setIsProcessing(false);
+        if(step !== 'confirming') { // Only reset if failed, otherwise let it close
+            setIsProcessing(false);
+            setStep('idle');
+        }
     }
   };
 
@@ -45,11 +100,11 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
         <div className="flex gap-3">
           <Info className="text-green-500 shrink-0 mt-0.5" size={20} />
           <div className="space-y-1">
-            <h4 className="text-sm font-bold text-green-400">¿Qué está pasando aquí?</h4>
+            <h4 className="text-sm font-bold text-green-400">Transacción Real (Sepolia Testnode)</h4>
             <p className="text-xs text-green-200/70 leading-relaxed">
-              Vas a interactuar con el Smart Contract <span className="text-white font-medium">SessionSafe</span>. 
-              Depositarás tokens USDC que quedarán custodiados en la blockchain. 
-              Esto crea el "colateral" para abrir un <span className="text-white font-medium">canal de estado (State Channel)</span> seguro con Yellow Network.
+              Esta acción enviará dos transacciones a tu wallet:
+              <br/>1. <b>Approve:</b> Permitir que Yellow mueva tus USDC.
+              <br/>2. <b>Deposit:</b> Enviar los fondos al contrato Adjudicator.
             </p>
           </div>
         </div>
@@ -58,7 +113,7 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
       {/* Input Section */}
       <div className="space-y-4 mb-6">
         <label className="block text-sm font-medium text-gray-400">
-          Monto a Custodiar (MUSDC)
+          Monto a Custodiar (USDC en Sepolia)
         </label>
         <div className="relative">
           <input
@@ -70,7 +125,7 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
             placeholder="0.00"
           />
           <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold bg-white/10 px-2 py-1 rounded text-gray-400">
-            MUSDC
+            USDC
           </div>
         </div>
       </div>
@@ -79,23 +134,34 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
       <button
         onClick={handleDeposit}
         disabled={isProcessing}
-        className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-yellow-400/50 disabled:cursor-not-allowed text-black font-bold py-4 rounded-lg text-lg flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(250,204,21,0.3)] hover:shadow-[0_0_30px_rgba(250,204,21,0.5)]"
+        className="relative overflow-hidden w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-yellow-400/50 disabled:cursor-not-allowed text-black font-bold py-4 rounded-lg text-lg flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(250,204,21,0.3)] hover:shadow-[0_0_30px_rgba(250,204,21,0.5)]"
       >
+        {isProcessing && (
+            <div 
+                className="absolute left-0 top-0 bottom-0 bg-white/30 transition-all duration-[800ms] ease-out"
+                style={{ width: `${progress}%` }}
+            />
+        )}
+        
         {isProcessing ? (
           <>
-            <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
-            <span>Firmando...</span>
+            <Loader2 className="animate-spin relative z-10" />
+            <span className="relative z-10">
+                {step === 'approving' && 'Aprobando (1/2)...'}
+                {step === 'depositing' && 'Depositando (2/2)...'}
+                {step === 'confirming' && 'Confirmando...'}
+            </span>
           </>
         ) : (
           <>
-            <Lock size={20} />
-            <span>Firmar & Depositar</span>
+            <Lock size={20} className="relative z-10" />
+            <span className="relative z-10">Confirmar Depósito</span>
           </>
         )}
       </button>
       
       <p className="text-center text-xs text-gray-500 mt-4">
-        Esta acción cuesta gas y requiere confirmación de bloque.
+        Sepolia Chain ID: 11155111
       </p>
     </Modal>
   );

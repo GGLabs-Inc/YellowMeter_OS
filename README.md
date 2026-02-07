@@ -1,73 +1,77 @@
-# React + TypeScript + Vite
+# 🟡 YellowMeter OS (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interfaz de usuario moderna construida con **React, Vite y TailwindCSS**. Diseñada para interactuar con la infraestructura de **Yellow Network**, permitiendo a los usuarios depositar fondos, firmar transacciones off-chain y liquidar ganancias en una experiencia "Cinemática".
 
-Currently, two official plugins are available:
+## ⚡ Tecnologías
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+*   **Framework**: React + Vite (TypeScript)
+*   **Web3**: Wagmi + Viem (Conexión a Sepolia)
+*   **Estilos**: TailwindCSS + Lucide Icons
+*   **Gestión de Estado**: Context API (`SessionContext`) persistente.
 
-## React Compiler
+## 🌊 Flujos Principales
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 1. Depósito (On-Chain)
+El usuario bloquea fondos en el contrato de custodia (`Adjudicator`) para abrir un canal.
+*   **Archivo**: `src/components/modals/DepositModal.tsx`
+*   **Acciones**:
+    1.  `USDC.approve(Adjudicator, amount)`
+    2.  `Adjudicator.deposit(user, token, amount)`
 
-## Expanding the ESLint configuration
+### 2. Operación Off-Chain (AI Chat)
+El usuario interactúa con servicios (ej. Chatbot) sin pagar gas por mensaje.
+*   **Archivo**: `src/components/modals/AiChatModal.tsx`
+*   **Lógica**:
+    1.  Genera un estado local (Balance actual - Costo servicio).
+    2.  Crea un mensaje determinista: `CHANNEL:...|NONCE:...`.
+    3.  Firma el mensaje con su wallet (`viem`).
+    4.  Envía la firma al Backend para validación.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 3. Persistencia de Sesión
+Para evitar pérdida de fondos al recargar la página, almacenamos las claves de sesión.
+*   **Archivo**: `src/context/SessionContext.tsx`
+*   **Storage**: `localStorage` guarda `sessionPrivateKey`, `balance`, y `logs`.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 4. Liquidación (Settlement)
+Cierre del canal y retiro de fondos. Implementa un **Retiro en 2 Pasos** para asegurar la liquidez.
+*   **Archivo**: `src/components/modals/SettlementModal.tsx`
+*   **Pasos**:
+    1.  **Withdraw**: Retira el 100% de los fondos depositados del contrato `Adjudicator`.
+    2.  **Fee Payment**: Envía una transferencia de USDC (`transfer`) a la wallet del servidor por el monto consumido.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## 🛠️ Configuración
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Las direcciones de contratos y endpoints están centralizadas en:
+`src/config/constants.ts`
+
+```typescript
+export const CONTRACTS = {
+  USDC: '0x1c...7238',
+  Adjudicator: '0x01...b262',
+  ServerWallet: '0x5C...35C' // Tesorería
+};
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Ejecución
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+# Instalar dependencias
+npm install
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Iniciar servidor de desarrollo
+npm run dev
+```
+
+## 📂 Estructura del Proyecto
+
+```
+src/
+├── components/
+│   ├── modals/       # Deposit, Settlement, AI Chat
+│   ├── layout/       # StateBar, Dashboard
+│   └── ui/           # Componentes base
+├── context/          # SessionContext (Estado Global)
+├── services/         # ai.service.ts (API Calls)
+├── config/           # Constantes Web3
+└── App.tsx           # Entry Point
 ```

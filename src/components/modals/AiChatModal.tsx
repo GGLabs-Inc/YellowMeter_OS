@@ -4,11 +4,13 @@ import remarkGfm from 'remark-gfm';
 import { Modal } from '../ui/Modal';
 import { useSession } from '../../context/SessionContext';
 import { Send, Bot, Cpu, ChevronDown, Check, Settings2 } from 'lucide-react';
+import { aiService } from '../../services/ai.service'; // Importar servicio nuevo
 
 interface AiChatModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
 
 interface Message {
   id: string;
@@ -76,7 +78,7 @@ const MODEL_GROUPS: ModelGroup[] = [
 const ALL_MODELS = MODEL_GROUPS.flatMap(g => g.items);
 
 export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
-  const { addLog, balance, actionsCount } = useSession();
+  const { addLog, balance, actionsCount, sessionAccount } = useSession();
   const [messages, setMessages] = useState<Message[]>([
     { id: '1', sender: 'bot', text: 'Hola, soy YellowBot. Paga por uso para chatear conmigo.' }
   ]);
@@ -107,7 +109,16 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
   }, []);
 
   const handleSend = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isThinking) return;
+
+    if (!sessionAccount) {
+        setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            sender: 'bot',
+            text: '⚠️ No Active Channel. Please Deposit and Open Channel first.'
+        }]);
+        return;
+    }
 
     // 1. Add User Message
     const userText = inputText;
@@ -120,65 +131,29 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
     setInputText('');
     setIsThinking(true);
     
-    // 2. Log Payment (Off-chain signature simulation)
-    addLog(`AI_QUERY: ${selectedModel.id}`, selectedModel.cost, `0x${Math.random().toString(16).slice(2)}...`);
-    
     try {
-        // 3. Call Deepseek API
-        const apiKey = import.meta.env.VITE_DEEPSEEK_API_KEY;
+        // 2. Call AI Service (Sign & Pay & Inference)
+        const response = await aiService.requestInference(userText, sessionAccount);
         
-        const response = await fetch('https://api.deepseek.com/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: "deepseek-chat", // Deepseek API only supports its own models
-                messages: [
-                    { 
-                        role: "system", 
-                        content: `You are YellowBot, an AI assistant inside a Web3 State Channel OS. 
-                        The user selected the model "${selectedModel.name}". 
-                        Please answer succinctly and helpfully.` 
-                    },
-                    ...messages.map(m => ({ 
-                        role: m.sender === 'user' ? 'user' : 'assistant', 
-                        content: m.text 
-                    })),
-                    { role: "user", content: userText }
-                ],
-                stream: false
-            })
-        });
+        // 3. Add Bot Response
+        const botMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          sender: 'bot',
+          text: response.result
+        };
+        setMessages(prev => [...prev, botMsg]);
 
-        const data = await response.json();
-        
-        if (data.choices && data.choices[0]) {
-             const botMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                sender: 'bot',
-                text: data.choices[0].message.content
-            };
-            setMessages(prev => [...prev, botMsg]);
-        } else {
-             console.error("Deepseek API Error:", data);
-             const errorMsg: Message = {
-                id: Date.now().toString(),
-                sender: 'bot',
-                text: "Error conectando con Deepseek API. Revisa la consola."
-             };
-             setMessages(prev => [...prev, errorMsg]);
-        }
+        // 4. Log Payment
+        addLog(`AI_QUERY: ${selectedModel.id}`, selectedModel.cost, response.newServerSignature.slice(0, 10)); // Use real signature from server
 
-    } catch (error) {
-        console.error("Fetch Error:", error);
+    } catch (error: any) {
+        console.error("AI Error:", error);
          const errorMsg: Message = {
             id: Date.now().toString(),
             sender: 'bot',
-            text: "Error de red al conectar con la IA."
-         };
-         setMessages(prev => [...prev, errorMsg]);
+            text: `❌ Error: ${error.message || 'Service unavailable'}`
+        };
+        setMessages(prev => [...prev, errorMsg]);
     } finally {
         setIsThinking(false);
     }
