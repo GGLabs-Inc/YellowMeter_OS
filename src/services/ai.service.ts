@@ -1,5 +1,6 @@
 import { type LocalAccount } from 'viem';
 import axios from 'axios';
+import { BACKEND_URL } from '../config/constants';
 
 // Definición de tipos alineada con el Backend
 export interface ChannelState {
@@ -16,9 +17,6 @@ export interface AIResponse {
   result: string;
   newServerSignature: string;
 }
-
-// URL del Backend (Hardcoded por ahora para desarrollo)
-const BACKEND_URL = 'http://localhost:3000';
 
 export const aiService = {
   /**

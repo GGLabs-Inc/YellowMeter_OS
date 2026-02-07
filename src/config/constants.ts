@@ -1,5 +1,5 @@
-export const BACKEND_URL = 'http://localhost:3000';
-export const WS_URL = 'http://localhost:3000';
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+export const WS_URL = BACKEND_URL;
 
 export const CONTRACTS = {
   USDC: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238', // Sepolia USDC Faucet
