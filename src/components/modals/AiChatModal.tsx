@@ -34,7 +34,7 @@ interface ModelGroup {
 // Grouped models configuration mimicking the screenshot
 const MODEL_GROUPS: ModelGroup[] = [
   {
-    title: 'Auto',
+    title: 'AI MODEL',
     items: [
       { id: 'auto', name: 'Auto (Best)', cost: 0.02, provider: 'Yellow' } // 10% discount implied
     ]

@@ -50,9 +50,6 @@ Crea un archivo `.env` en la raíz del proyecto para conectar con el backend y s
 # Local: http://localhost:3000
 # Producción: https://yellowmeter-backend.onrender.com
 VITE_BACKEND_URL=https://yellowmeter-backend.onrender.com
-
-# DeepSeek API (Opcional - para chat de IA directo)
-VITE_DEEPSEEK_API_KEY=tu_api_key_aqui
 ```
 
 ### Constantes Globales

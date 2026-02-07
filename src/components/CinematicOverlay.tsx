@@ -1179,7 +1179,7 @@ const settlement = await session.closeAndSettle();
             </svg>
             <span className="text-foreground font-semibold">YellowMeter OS</span>
           </div>
-          <span>Yellow Network Prize Submission 2025</span>
+          <span>Yellow Network Prize Submission 2026</span>
         </div>
       </footer>
     </div>
