@@ -1,4 +1,4 @@
-# 🟡 YellowMeter OS (Frontend)
+# ⚡ YellowMeter OS (Frontend)
 
 Interfaz de usuario moderna construida con **React, Vite y TailwindCSS**. Diseñada para interactuar con la infraestructura de **Yellow Network**, permitiendo a los usuarios depositar fondos, firmar transacciones off-chain y liquidar ganancias en una experiencia "Cinemática".
 
@@ -41,8 +41,22 @@ Cierre del canal y retiro de fondos. Implementa un **Retiro en 2 Pasos** para as
 
 ## 🛠️ Configuración
 
-Las direcciones de contratos y endpoints están centralizadas en:
-`src/config/constants.ts`
+### Variables de Entorno (.env)
+
+Crea un archivo `.env` en la raíz del proyecto para conectar con el backend y servicios externos.
+
+```dotenv
+# Backend API (Local o Producción)
+# Local: http://localhost:3000
+# Producción: https://yellowmeter-backend.onrender.com
+VITE_BACKEND_URL=https://yellowmeter-backend.onrender.com
+
+# DeepSeek API (Opcional - para chat de IA directo)
+VITE_DEEPSEEK_API_KEY=tu_api_key_aqui
+```
+
+### Constantes Globales
+Las direcciones de contratos se encuentran en `src/config/constants.ts`:
 
 ```typescript
 export const CONTRACTS = {
