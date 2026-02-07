@@ -7,7 +7,7 @@ const domain = {
   name: 'YellowSession',
   version: '1',
   chainId: CHAIN_ID,
-  verifyingContract: CONTRACTS.SessionSafe as `0x${string}`,
+  verifyingContract: CONTRACTS.Adjudicator as `0x${string}`,
 } as const;
 
 // The data structure we are signing

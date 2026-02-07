@@ -24,6 +24,8 @@ export function SettlementModal({ isOpen, onClose }: SettlementModalProps) {
   const publicClient = usePublicClient();
 
   const handleSettle = async () => {
+    if (!publicClient) return;
+
     setStep('processing');
     setProgress(10); // Inicio
 
