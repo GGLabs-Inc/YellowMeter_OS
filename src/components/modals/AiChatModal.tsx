@@ -3,8 +3,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Modal } from '../ui/Modal';
 import { useSession } from '../../context/SessionContext';
-import { Send, Bot, Cpu, ChevronDown, Check, Settings2 } from 'lucide-react';
-import { aiService } from '../../services/ai.service'; // Import new service
+import { Send, Bot, Cpu, ChevronDown, Check, Settings2, Loader2 } from 'lucide-react';
+import { aiService } from '../../services/ai.service';
 
 interface AiChatModalProps {
   isOpen: boolean;
@@ -86,6 +86,8 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
   const [selectedModel, setSelectedModel] = useState(ALL_MODELS.find(m => m.id === 'gemini-3-pro') || ALL_MODELS[0]);
   const [isModelMenuOpen, setIsModelMenuOpen] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const isConnected = !!sessionAccount;
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -108,6 +110,11 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+
+
+  /**
+   * 💬 ENVIAR MENSAJE A IA
+   */
   const handleSend = async () => {
     if (!inputText.trim() || isThinking) return;
 
@@ -155,15 +162,22 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
         };
         setMessages(prev => [...prev, errorMsg]);
     } finally {
-        setIsThinking(false);
+      setIsThinking(false);
     }
   };
+
+  /**
+   * 🔒 CLOSE MODAL (Session remains active in background)
+   */
+  function handleCloseSession() {
+      onClose();
+  }
 
   return (
     <Modal 
         isOpen={isOpen} 
-        onClose={onClose} 
-        title="AI Chat Gateway" 
+        onClose={handleCloseSession} 
+        title="AI Chat Gateway - Yellow Network" 
         className="max-w-4xl"
     >
       {/* Header Status */}
@@ -180,9 +194,13 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             </div>
         </div>
 
-        <div className="text-xs text-gray-500 font-mono flex items-center gap-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            ONLINE
+        <div className={`text-xs font-mono flex items-center gap-2 px-3 py-1.5 rounded-md ${
+          isConnected 
+            ? 'bg-green-500/10 text-green-500 border border-green-500/30' 
+            : 'bg-gray-500/10 text-gray-500 border border-gray-500/30'
+        }`}>
+            <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></span>
+            {isConnected ? 'CHANNEL OPEN' : 'CONNECTING...'}
         </div>
       </div>
 
@@ -218,11 +236,12 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             {isThinking && (
                  <div className="flex justify-start">
                     <div className="bg-[#1a1d24] border border-yellow-500/20 text-gray-200 rounded-2xl rounded-bl-none p-3 text-sm flex items-center gap-2">
-                        <Bot size={12} className="text-yellow-500" />
-                        <span className="text-gray-400 text-xs animate-pulse">Thinking...</span>
+                        <Loader2 size={12} className="text-yellow-500 animate-spin" />
+                        <span className="text-gray-400 text-xs">Processing with {selectedModel.name}...</span>
                     </div>
                  </div>
             )}
+
             <div ref={messagesEndRef} />
         </div>
 
@@ -304,10 +323,20 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
             </div>
              <button
                     onClick={handleSend}
-                    className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+                    disabled={!isConnected || isThinking || !inputText.trim()}
+                    className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-yellow-400"
                 >
-                    <span>Send</span>
-                    <Send size={16} />
+                    {isThinking ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>Processing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Send</span>
+                        <Send size={16} />
+                      </>
+                    )}
                 </button>
         </div>
       </div>
