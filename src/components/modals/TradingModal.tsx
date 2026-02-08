@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Modal } from '../ui/Modal';
 import { useSession } from '../../context/SessionContext';
 import { ArrowUpRight, ArrowDownRight, Activity, Wifi, WifiOff, TrendingUp, TrendingDown, Volume2 } from 'lucide-react';
-import { createChart, CandlestickSeries, HistogramSeries, LineSeries, ColorType, LineStyle } from 'lightweight-charts';
+import { createChart, CandlestickSeries, HistogramSeries, ColorType, LineStyle } from 'lightweight-charts';
 import type { IChartApi, ISeriesApi, CandlestickData, Time } from 'lightweight-charts';
 
 // Advanced price simulation with momentum and mean reversion
@@ -102,9 +102,7 @@ interface RecentTrade {
 // Finnhub API Configuration
 const FINNHUB_API_KEY = 'd640pohr01ql6dj1oqt0d640pohr01ql6dj1oqtg';
 const FINNHUB_WS_URL = `wss://ws.finnhub.io?token=${FINNHUB_API_KEY}`;
-const FINNHUB_API_BASE = 'https://finnhub.io/api/v1';
 const SYMBOL = 'BINANCE:ETHUSDT';
-const SYMBOL_DISPLAY = 'ETH/USDT';
 
 export function TradingModal({ isOpen, onClose }: TradingModalProps) {
   const { balance } = useSession();
@@ -135,7 +133,6 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
   const chartRef = useRef<IChartApi | null>(null);
   const candlestickSeriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
   const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
-  const priceLineSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
   
   // Price simulator ref
   const priceSimulatorRef = useRef<PriceSimulator | null>(null);
@@ -149,89 +146,20 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
   const [priceFlash, setPriceFlash] = useState<'up' | 'down' | null>(null);
   const prevPriceRef = useRef<number>(0);
 
-  // Map timeframe to Finnhub resolution
-  const getResolution = (tf: string): string => {
-    const map: Record<string, string> = {
-      '1m': '1', '5m': '5', '15m': '15', '30m': '30',
-      '1h': '60', '4h': '240', '1d': 'D', '1w': 'W', '1M': 'M'
+  // Helper function to get timeframe in seconds
+  const getTimeframeSeconds = (tf: string): number => {
+    const map: Record<string, number> = {
+      '1m': 60,
+      '5m': 300,
+      '15m': 900,
+      '1h': 3600,
+      '4h': 14400,
+      '1d': 86400,
     };
-    return map[tf] || '1';
+    return map[tf.toLowerCase()] || 60;
   };
 
-  // Fetch historical candles from Finnhub
-  const fetchHistoricalData = useCallback(async () => {
-    try {
-      const resolution = getResolution(timeframe);
-      const to = Math.floor(Date.now() / 1000);
-      const from = to - (resolution === 'D' ? 365 * 24 * 60 * 60 : resolution === 'W' ? 730 * 24 * 60 * 60 : 7 * 24 * 60 * 60);
-      
-      const response = await fetch(
-        `${FINNHUB_API_BASE}/crypto/candle?symbol=${SYMBOL}&resolution=${resolution}&from=${from}&to=${to}&token=${FINNHUB_API_KEY}`
-      );
-      const data = await response.json();
-      
-      if (data.s !== 'ok' || !data.t) {
-        console.warn('Finnhub returned no data, using fallback');
-        return;
-      }
-      
-      const candlesticks: CandlestickData<Time>[] = data.t.map((timestamp: number, i: number) => ({
-        time: timestamp as Time,
-        open: data.o[i],
-        high: data.h[i],
-        low: data.l[i],
-        close: data.c[i],
-      }));
-      
-      const volumes = data.t.map((timestamp: number, i: number) => ({
-        time: timestamp as Time,
-        value: data.v[i],
-        color: data.c[i] >= data.o[i] ? 'rgba(38, 166, 154, 0.5)' : 'rgba(239, 83, 80, 0.5)',
-      }));
-      
-      if (candlestickSeriesRef.current) {
-        candlestickSeriesRef.current.setData(candlesticks);
-      }
-      if (volumeSeriesRef.current) {
-        volumeSeriesRef.current.setData(volumes);
-      }
-      
-      // Set current candle
-      if (candlesticks.length > 0) {
-        setCurrentCandle(candlesticks[candlesticks.length - 1]);
-      }
-    } catch (error) {
-      console.error('Error fetching Finnhub historical data:', error);
-    }
-  }, [timeframe]);
 
-  // Fetch initial quote data
-  const fetchQuoteData = useCallback(async () => {
-    try {
-      // Use crypto profile for 24h data approximation
-      const response = await fetch(
-        `${FINNHUB_API_BASE}/quote?symbol=${SYMBOL}&token=${FINNHUB_API_KEY}`
-      );
-      const data = await response.json();
-      
-      if (data.c) {
-        setTicker(prev => ({
-          ...prev,
-          lastPrice: data.c,
-          priceChange: data.d || 0,
-          priceChangePercent: data.dp || 0,
-          high24h: data.h || data.c,
-          low24h: data.l || data.c,
-        }));
-        
-        if (!price) {
-          setPrice(data.c.toFixed(2));
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching quote:', error);
-    }
-  }, [price]);
 
   // Initialize chart with simulated historical data
   useEffect(() => {
@@ -274,9 +202,9 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
       timeScale: {
         borderColor: '#2a2d35',
         timeVisible: true,
-        secondsVisible: true,
+        secondsVisible: timeframe === '1m',
         rightOffset: 5,
-        minBarSpacing: 6,
+        minBarSpacing: timeframe === '1d' || timeframe === '4h' ? 10 : 6,
         fixLeftEdge: false,
         fixRightEdge: false,
       },
@@ -322,38 +250,42 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
       scaleMargins: { top: 0.85, bottom: 0 },
     });
 
-    // Current price line series
-    const priceLineSeries = chart.addSeries(LineSeries, {
-      color: '#f0b90b',
-      lineWidth: 1,
-      lineStyle: LineStyle.Dotted,
-      priceLineVisible: false,
-      lastValueVisible: true,
-      crosshairMarkerVisible: false,
-    });
-
     chartRef.current = chart;
     candlestickSeriesRef.current = candlestickSeries;
     volumeSeriesRef.current = volumeSeries;
-    priceLineSeriesRef.current = priceLineSeries;
 
     // Initialize price simulator with ETH starting price
     const initialPrice = 2075;
-    const simulator = new PriceSimulator(initialPrice, 0.0004);
+    
+    // Adjust volatility based on timeframe (higher timeframes = more volatility per candle)
+    const volatilityMap: Record<string, number> = {
+      '1m': 0.0003,
+      '5m': 0.0006,
+      '15m': 0.001,
+      '1h': 0.002,
+      '4h': 0.004,
+      '1d': 0.008,
+    };
+    const volatility = volatilityMap[timeframe] || 0.0003;
+    
+    const simulator = new PriceSimulator(initialPrice, volatility);
     priceSimulatorRef.current = simulator;
     
     // Generate realistic historical data (last 100 candles)
     const now = Math.floor(Date.now() / 1000);
-    const timeframeSeconds = timeframe === '1m' ? 60 : timeframe === '5m' ? 300 : timeframe === '15m' ? 900 : 60;
+    const timeframeSeconds = getTimeframeSeconds(timeframe);
+    
+    // Align to proper candle boundaries
+    const alignedNow = Math.floor(now / timeframeSeconds) * timeframeSeconds;
     const historicalCandles: CandlestickData<Time>[] = [];
     const historicalVolumes: { time: Time; value: number; color: string }[] = [];
     
     // Start from 100 periods ago
     let tempPrice = initialPrice * (1 + (Math.random() - 0.5) * 0.05); // Start with some variance
-    const tempSimulator = new PriceSimulator(tempPrice, 0.0005);
+    const tempSimulator = new PriceSimulator(tempPrice, volatility * 1.2); // Slightly higher volatility for varied history
     
     for (let i = 100; i >= 1; i--) {
-      const candleTime = now - (i * timeframeSeconds);
+      const candleTime = alignedNow - (i * timeframeSeconds);
       const candle = tempSimulator.generateCandle(timeframeSeconds * 1000);
       
       historicalCandles.push({
@@ -603,7 +535,7 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
       // Update current candle in real-time
       setCurrentCandle(prev => {
         const currentTime = Math.floor(Date.now() / 1000);
-        const timeframeSeconds = timeframe === '1m' ? 60 : timeframe === '5m' ? 300 : timeframe === '15m' ? 900 : timeframe === '1h' ? 3600 : timeframe === '4h' ? 14400 : 60;
+        const timeframeSeconds = getTimeframeSeconds(timeframe);
         
         if (!prev) {
           // Create initial candle
@@ -656,14 +588,6 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
               color: updatedCandle.close >= updatedCandle.open 
                 ? 'rgba(38, 166, 154, 0.5)' 
                 : 'rgba(239, 83, 80, 0.5)',
-            });
-          }
-          
-          // Update price line
-          if (priceLineSeriesRef.current) {
-            priceLineSeriesRef.current.update({
-              time: currentTime as Time,
-              value: newPrice,
             });
           }
           
@@ -941,25 +865,25 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
         </div>
 
         {/* RIGHT COLUMN: Orderbook & Execution */}
-        <div className="w-[340px] bg-[#15171e] flex flex-col">
+        <div className="w-[340px] bg-[#15171e] flex flex-col border-l border-[#333]">
             
             {/* Order Book */}
-            <div className="flex-1 border-b border-[#333] flex flex-col">
-                <div className="p-3 border-b border-[#333] text-gray-400 text-[10px] font-bold uppercase flex justify-between">
-                    <span>Price (USDT)</span>
+            <div className="flex-1 flex flex-col min-h-0">
+                <div className="p-3 border-b border-[#333] text-gray-400 text-[10px] font-bold uppercase flex justify-between bg-[#15171e] z-10">
+                    <span>Price (USDC)</span>
                     <span>Size (ETH)</span>
                     <span>Total</span>
                 </div>
-                <div className="flex-1 overflow-hidden font-mono text-xs">
+                <div className="flex-1 overflow-y-auto custom-scrollbar font-mono text-xs relative">
                     {/* Asks (Sell Orders) */}
-                    <div className="flex flex-col-reverse h-[45%] justify-end">
+                    <div className="flex flex-col-reverse justify-end min-h-[160px]">
                          {asks.map((ask, i) => (
-                             <div key={i} className="flex justify-between px-3 py-0.5 hover:bg-[#333]/50 cursor-pointer text-red-400 relative group">
+                             <div key={i} className="flex justify-between px-3 py-0.5 hover:bg-[#333]/50 cursor-pointer text-red-400 relative group transition-colors">
                                  <span className="z-10 font-medium">{ask.price.toFixed(2)}</span>
                                  <span className="z-10 text-gray-400">{ask.size.toFixed(4)}</span>
                                  <span className="z-10 text-gray-500">{ask.total.toFixed(4)}</span>
                                  <div 
-                                   className="absolute right-0 top-0 bottom-0 bg-red-500/10 group-hover:bg-red-500/20 transition-all" 
+                                   className="absolute right-0 top-0 bottom-0 bg-red-500/10 group-hover:bg-red-500/20 transition-all duration-300" 
                                    style={{ width: `${(ask.total / maxAskTotal) * 100}%`}}
                                  />
                              </div>
@@ -967,25 +891,25 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
                     </div>
                     
                     {/* Spread Info */}
-                    <div className={`py-2 text-center border-y border-[#333] text-lg font-bold bg-[#0b0e11] flex items-center justify-center gap-2 transition-all duration-150 ${
+                    <div className={`sticky my-1 py-1.5 text-center border-y border-[#333] text-lg font-bold bg-[#0b0e11] z-10 flex items-center justify-center gap-2 transition-all duration-150 shadow-lg ${
                       priceFlash === 'up' ? 'text-green-400 bg-green-900/10' : 
                       priceFlash === 'down' ? 'text-red-400 bg-red-900/10' : 
                       isPriceUp ? 'text-green-400' : 'text-red-400'
                     }`}>
                         <span className="font-mono">{ticker.lastPrice.toFixed(2)}</span>
-                        {isPriceUp ? <ArrowUpRight size={18} className="animate-bounce"/> : <ArrowDownRight size={18} className="animate-bounce"/>}
-                        <span className="text-xs text-gray-500 font-normal">${ticker.lastPrice.toFixed(2)}</span>
+                        {isPriceUp ? <ArrowUpRight size={16} className="animate-bounce"/> : <ArrowDownRight size={16} className="animate-bounce"/>}
+                        <span className="text-xs text-gray-500 font-normal ml-1">${ticker.lastPrice.toFixed(2)}</span>
                     </div>
 
                     {/* Bids (Buy Orders) */}
-                    <div className="flex flex-col h-[45%]">
+                    <div className="flex flex-col min-h-[160px]">
                          {bids.map((bid, i) => (
-                             <div key={i} className="flex justify-between px-3 py-0.5 hover:bg-[#333]/50 cursor-pointer text-green-400 relative group">
+                             <div key={i} className="flex justify-between px-3 py-0.5 hover:bg-[#333]/50 cursor-pointer text-green-400 relative group transition-colors">
                                  <span className="z-10 font-medium">{bid.price.toFixed(2)}</span>
                                  <span className="z-10 text-gray-400">{bid.size.toFixed(4)}</span>
                                  <span className="z-10 text-gray-500">{bid.total.toFixed(4)}</span>
                                  <div 
-                                   className="absolute right-0 top-0 bottom-0 bg-green-500/10 group-hover:bg-green-500/20 transition-all" 
+                                   className="absolute right-0 top-0 bottom-0 bg-green-500/10 group-hover:bg-green-500/20 transition-all duration-300" 
                                    style={{ width: `${(bid.total / maxBidTotal) * 100}%`}}
                                  />
                              </div>
@@ -994,80 +918,97 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
                 </div>
             </div>
 
-            {/* Execution Panel using Session Balance */}
-            <div className="p-4 bg-[#1e2329]">
-                <div className="flex bg-[#2a2d35] p-1 rounded-lg mb-4">
+            {/* Execution Panel */}
+            <div className="p-4 bg-[#1e2329] border-t border-[#333] shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-20 flex-shrink-0">
+                <div className="flex bg-[#0b0e11] p-1 rounded-lg mb-4 border border-[#333]">
                     <button 
                         onClick={() => setOrderType('LIMIT')}
-                        className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${orderType === 'LIMIT' ? 'bg-[#363a45] text-white shadow' : 'text-gray-500'}`}
+                        className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${orderType === 'LIMIT' ? 'bg-[#363a45] text-white shadow ring-1 ring-[#555]' : 'text-gray-500 hover:text-gray-300'}`}
                     >
                         Limit
                     </button>
                     <button 
                         onClick={() => setOrderType('MARKET')}
-                        className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${orderType === 'MARKET' ? 'bg-[#363a45] text-white shadow' : 'text-gray-500'}`}
+                        className={`flex-1 text-xs font-bold py-1.5 rounded-md transition-all ${orderType === 'MARKET' ? 'bg-[#363a45] text-white shadow ring-1 ring-[#555]' : 'text-gray-500 hover:text-gray-300'}`}
                     >
                         Market
                     </button>
-                    <button className="flex-1 text-xs font-bold py-1.5 rounded-md text-gray-500">Stop</button>
+                    <button className="flex-1 text-xs font-bold py-1.5 rounded-md text-gray-500 hover:text-gray-300 cursor-not-allowed opacity-50">Stop</button>
                 </div>
 
                 <div className="flex gap-2 mb-4">
                     <button 
                         onClick={() => setSide('BUY')}
-                        className={`flex-1 py-2.5 font-bold text-sm rounded transition-all ${side === 'BUY' ? 'bg-green-600 text-white shadow-lg shadow-green-600/20' : 'bg-[#2a2d35] text-gray-400 hover:bg-[#333]'}`}
+                        className={`flex-1 py-2.5 font-bold text-sm rounded transition-all box-border border-2 ${
+                            side === 'BUY' 
+                            ? 'bg-green-600/20 text-green-400 border-green-500/50 shadow-[0_0_10px_rgba(34,197,94,0.2)]' 
+                            : 'bg-[#2a2d35] text-gray-500 border-transparent hover:border-[#444] hover:text-gray-300'
+                        }`}
                     >
                         Buy / Long
                     </button>
                     <button 
                         onClick={() => setSide('SELL')}
-                        className={`flex-1 py-2.5 font-bold text-sm rounded transition-all ${side === 'SELL' ? 'bg-red-600 text-white shadow-lg shadow-red-600/20' : 'bg-[#2a2d35] text-gray-400 hover:bg-[#333]'}`}
+                        className={`flex-1 py-2.5 font-bold text-sm rounded transition-all box-border border-2 ${
+                            side === 'SELL' 
+                            ? 'bg-red-600/20 text-red-400 border-red-500/50 shadow-[0_0_10px_rgba(239,68,68,0.2)]' 
+                            : 'bg-[#2a2d35] text-gray-500 border-transparent hover:border-[#444] hover:text-gray-300'
+                        }`}
                     >
                         Sell / Short
                     </button>
                 </div>
 
-                <div className="space-y-3 mb-4">
+                <div className="space-y-3 mb-4 overflow-y-auto max-h-[30vh] custom-scrollbar pr-1">
                     <div>
-                        <label className="text-[10px] uppercase text-gray-500 font-bold">Price (USDT)</label>
-                        <div className="relative">
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="text-[10px] uppercase text-gray-400 font-bold">Price</label>
+                            <span className="text-[10px] text-gray-500 font-mono">USDC</span>
+                        </div>
+                        <div className="relative group">
                             <input 
                                 type="text" 
                                 value={price} 
                                 onChange={(e) => setPrice(e.target.value)}
                                 placeholder={ticker.lastPrice.toFixed(2)}
-                                className="w-full bg-[#15171e] border border-[#333] rounded p-2.5 text-right text-sm text-white font-mono focus:border-yellow-500 outline-none transition-all"
+                                className="w-full bg-[#15171e] border border-[#333] group-hover:border-[#555] rounded p-2.5 text-right text-sm text-white font-mono focus:border-yellow-500 outline-none transition-all placeholder-gray-700"
                             />
                             <button 
                               onClick={() => setPrice(ticker.lastPrice.toFixed(2))}
-                              className="absolute left-2 top-2 text-[10px] text-yellow-500 hover:text-yellow-400 font-bold"
+                              className="absolute left-2 top-2 text-[10px] text-yellow-500 hover:text-yellow-400 font-bold bg-[#15171e] px-1 rounded"
                             >
                               LAST
                             </button>
                         </div>
                     </div>
                     <div>
-                        <label className="text-[10px] uppercase text-gray-500 font-bold">Amount (ETH)</label>
-                        <div className="relative">
+                        <div className="flex justify-between items-center mb-1">
+                            <label className="text-[10px] uppercase text-gray-400 font-bold">Amount</label>
+                            <span className="text-[10px] text-gray-500 font-mono">ETH</span>
+                        </div>
+                        <div className="relative group">
                             <input 
                                 type="text" 
                                 value={amount}
                                 onChange={(e) => setAmount(e.target.value)}
                                 placeholder="0.00"
-                                className="w-full bg-[#15171e] border border-[#333] rounded p-2.5 text-right text-sm text-white font-mono focus:border-yellow-500 outline-none transition-all"
+                                className="w-full bg-[#15171e] border border-[#333] group-hover:border-[#555] rounded p-2.5 text-right text-sm text-white font-mono focus:border-yellow-500 outline-none transition-all placeholder-gray-700"
                             />
                             <span className="absolute left-2 top-2.5 text-xs text-gray-500">ETH</span>
                         </div>
                         {/* Quick amount buttons */}
-                        <div className="flex gap-1 mt-1">
+                        <div className="flex gap-1 mt-1.5">
                           {[25, 50, 75, 100].map((pct) => (
                             <button
                               key={pct}
                               onClick={() => {
-                                const maxEth = balance / (parseFloat(price) || ticker.lastPrice);
-                                setAmount((maxEth * pct / 100).toFixed(4));
+                                const priceVal = parseFloat(price) || ticker.lastPrice;
+                                if (priceVal > 0) {
+                                    const maxEth = balance / priceVal;
+                                    setAmount((maxEth * pct / 100).toFixed(4));
+                                }
                               }}
-                              className="flex-1 text-[10px] py-1 bg-[#2a2d35] text-gray-400 hover:text-white hover:bg-[#333] rounded transition-all"
+                              className="flex-1 text-[10px] py-1 bg-[#2a2d35] border border-[#333] text-gray-400 hover:text-white hover:border-gray-500 hover:bg-[#333] rounded transition-all"
                             >
                               {pct}%
                             </button>
@@ -1075,40 +1016,44 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
                         </div>
                     </div>
                     
-                    <div className="flex justify-between text-xs pt-2 border-t border-[#333]">
-                        <span className="text-gray-500">Available Balance</span>
-                        <span className="text-white font-mono">{balance.toFixed(4)} USDT</span>
+                    <div className="flex justify-between text-xs pt-2 border-t border-[#333]/50">
+                        <span className="text-gray-500">Available</span>
+                        <div className="flex items-center gap-1">
+                            <span className="text-yellow-500 font-mono font-bold">{balance.toFixed(2)}</span>
+                            <span className="text-gray-400 text-[10px]">USDC</span>
+                        </div>
                     </div>
 
-                    <div className="bg-[#2a2d35] rounded p-2.5">
+                    <div className="bg-[#0b0e11] border border-[#2a2d35] rounded p-2.5">
                          <div className="flex justify-between text-[10px] text-gray-400 mb-1">
                              <span>Leverage</span>
                              <span className="text-yellow-500 font-bold">20x</span>
                          </div>
-                         <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                             <div className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 w-[20%] transition-all"></div>
+                         <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                             <div className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 w-[20%] transition-all shadow-[0_0_5px_rgba(234,179,8,0.5)]"></div>
                          </div>
                     </div>
                     
                     {/* Order Summary */}
-                    {amount && price && (
-                      <div className="bg-[#0b0e11] rounded p-2 text-[10px] space-y-1">
+                    {(amount && (parseFloat(price) || ticker.lastPrice)) && (
+                      <div className="bg-[#15171e] border border-[#333] rounded p-2 text-[10px] space-y-1 animate-in fade-in slide-in-from-top-2">
                         <div className="flex justify-between">
                           <span className="text-gray-500">Order Value</span>
-                          <span className="text-white font-mono">{(parseFloat(amount) * parseFloat(price)).toFixed(2)} USDT</span>
+                          <span className="text-white font-mono">{(parseFloat(amount) * (parseFloat(price) || ticker.lastPrice)).toFixed(2)} USDC</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-500">Est. Fee (0.04%)</span>
-                          <span className="text-gray-400 font-mono">{(parseFloat(amount) * parseFloat(price) * 0.0004).toFixed(4)} USDT</span>
+                          <span className="text-gray-400 font-mono">{(parseFloat(amount) * (parseFloat(price) || ticker.lastPrice) * 0.0004).toFixed(4)} USDC</span>
                         </div>
                       </div>
                     )}
                 </div>
 
-                <button className={`w-full py-3.5 rounded-lg font-bold text-white shadow-lg transition-all active:scale-95 ${
+                <button 
+                  className={`w-full py-3.5 rounded-lg font-bold text-white shadow-lg transition-all active:scale-95 text-sm flex items-center justify-center gap-2 ${
                   side === 'BUY' 
-                    ? 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 shadow-green-600/30' 
-                    : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 shadow-red-600/30'
+                    ? 'bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 shadow-green-600/20 border border-green-500/50' 
+                    : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 shadow-red-600/20 border border-red-500/50'
                 }`}>
                     {side === 'BUY' ? '🚀 Buy / Long ETH' : '📉 Sell / Short ETH'}
                 </button>
