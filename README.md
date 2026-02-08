@@ -1,102 +1,218 @@
-# ⚡ YellowMeter OS (Frontend)
+# YellowMeter OS
 
-YellowMeter OS is a decentralized, browser-based Operating System designed to simplify Web3 interactions. It introduces a desktop-like interface where apps (Trading, Chess, Chat) interact seamlessly with the blockchain using **Session Keys** and **State Channels**.
+**A seamless "Web3 Operating System" interface powered by Yellow Network State Channels.**
+
+YellowMeter OS demonstrates how cryptographic primitives can create seamless, "Web2-like" user experiences while maintaining "Web3" security. It integrates high-frequency applications (AI Chat, P2P Cloud Gaming, Messaging) using **State Channels** to eliminate gas fees for intermediate transactions.
 
 ## 🚀 Live Demo
 **URL:** [https://yellow-meter-os.vercel.app/](https://yellow-meter-os.vercel.app/)
 
 ---
 
-## ⚡ Yellow Network Implementation
+## 🏗 System Architecture
 
-This is the core innovation of the project. We moved beyond simple wallet signatures to extensive **Session Keys** implementation.
+We use bidirectional state channels to create a secure off-chain tunnel between the User (Client) and the OS (Server).
 
-### 1. Session Keys & Nitrolite Client
-Instead of asking the user to sign every single chess move or chat message (which ruins UX), we generate a temporary **Session Key** inside the browser.
+### High-Level Component Diagram
 
-*   **Logic**: `src/context/SessionContext.tsx`
-*   **Mechanism**:
-    1.  User "Deposits" funds to open a channel (On-Chain).
-    2.  Browser generates a specialized ephemeral private key using `viem`.
-    3.  This key is stored securely in local storage for the duration of the session.
-    4.  The Frontend signs **thousands** of micro-transactions automatically using this background key.
+```mermaid
+graph TD
+    subgraph "Client Side (YellowMeter OS)"
+        User[User / Wallet] --> |Signs Opening Tx| App[React Application]
+        
+        subgraph "Protocol Engine (SessionContext)"
+            SessionContext[SessionContext] --> |Generates| LocalKey[Ephemeral Session Key]
+            SessionContext --> |Manages| StateChannel[Channel State Database]
+        end
+        
+        subgraph "User Interface"
+            Dashboard --> |Launches| Modals
+            Modals --> AiChat[AiChatModal - Pay per Prompt]
+            Modals --> Chess[ChessModal - Pay per Game]
+            Modals --> HUD[WalletHUD - Balance Monitor]
+        end
+        
+        subgraph "Services"
+            AIService[AI Service]
+            MsgService[Messaging Service]
+            GameSocket[Game Socket]
+        end
+        
+        App --> SessionContext
+        AiChat --> AIService
+        Chess --> GameSocket
+        AIService --> |Signs Payloads| LocalKey
+    end
+    
+    subgraph "Backend Infrastructure"
+        AI_Node[AI Logic Node]
+        Adj_Node[State Adjudicator]
+    end
+    
+    subgraph "Blockchain (Layer 1)"
+        AdjudicatorContract[Yellow Adjudicator Contract]
+    end
 
-### 2. EIP-712 Typed Signatures (Strict Protocol)
-We use a strongly typed signing domain to ensure the backend can deterministically validate actions.
+    %% Connections
+    AIService -- "1. Request + Sig(State)" --> AI_Node
+    AI_Node -- "2. Response + CounterSig(State)" --> AIService
+    
+    GameSocket -- "Realtime State" --> Adj_Node
+    
+    User -- "Deposit Funds" --> AdjudicatorContract
+    AI_Node -- "Settlement Proof" --> AdjudicatorContract
+```
 
-**Implementation (`src/hooks/useGameSigner.ts`):**
+### The "State Channel" Engine Sequence
+
+This sequence diagram illustrates the lifecycle of a user session, from the initial on-chain deposit to the high-frequency off-chain interactions.
+
+```mermaid
+sequenceDiagram
+    participant U as User (Wallet)
+    participant S as Session Key (Client)
+    participant B as Backend (Yellow Node)
+    participant C as Adjudicator (Chain)
+
+    rect rgb(33, 33, 33)
+        note right of U: Phase 1: Opening (Gas Required)
+        U->>C: Deposit MockUSDC (100.0)
+        C-->>U: Channel Created (ID: 0xCH_123)
+        U->>S: Generate Ephemeral Key (viem) & Authorize
+    end
+
+    rect rgb(50, 40, 0)
+        note right of U: Phase 2: Transacting (Zero Gas)
+        loop High Frequency Actions
+            note over U, B: Example: AI Query (Cost: 0.02 USDC)
+            U->>S: Request Action (Prompt)
+            S->>S: Update State (Nonce: N+1, Bal: 99.98)
+            S->>S: Sign State (Sig_User)
+            S->>B: Send Request + Sig_User
+            B->>B: Validate Sig & Balance
+            B->>B: Execute Logic (LLM Inference)
+            B->>S: Return Result + Counter-Sign (Sig_Server)
+            S->>U: Display Result (Confirmed)
+        end
+    end
+
+    rect rgb(20, 20, 40)
+        note right of U: Phase 3: Settlement (Gas Required)
+        U->>C: Request Withdrawal
+        B->>C: Submit Final Proof (Highest Nonce State)
+        C->>U: Transfer Remaining Funds (99.98 USDC)
+        C->>B: Transfer Earnings (0.02 USDC)
+    end
+```
+
+---
+
+## 🔐 Protocol Implementation Details
+
+### Data Structures
+The core of the integration relies on the `ChannelState` structure. This ensures both parties agree on the financial state at any point in time.
+
 ```typescript
-const types = {
-  GameMove: [
-    { name: 'gameId', type: 'string' },
-    { name: 'move', type: 'string' },
-    { name: 'nonce', type: 'uint256' },
-  ]
-};
-```
-This ensures that every signed packet is unforgeable and strictly associated with the active Channel ID.
-
----
-
-## 🌐 ENS Integration (Identity)
-
-YellowMeter uses ENS as the primary identity layer. We believe users should interact with names, not hex strings.
-
-*   **Forward Resolution**: The Chat and Trading apps accept ENS names (`alice.eth`) and rely on **Wagmi** to resolve them to 0x addresses before initiating channels.
-*   **Reverse Resolution**: We display user avatars and names in the "OS Taskbar" and "Profile" sections.
-*   **Caching**: To improve performance, resolved names are cached in the local session state.
-
----
-
-## 🛠 Tech Stack & Architecture
-
-This project is built as a Single Page Application (SPA) simulating a Desktop Environment.
-
-| Layer | Technology | Usage |
-| :--- | :--- | :--- |
-| **Framework** | **React 19** + **Vite** | Core application logic. |
-| **Blockchain** | **Viem** + **Wagmi** | Low-level interaction & Hooks. |
-| **State** | **React Context** | Managing the "OS" window manager. |
-| **Signatures** | **EIP-712** | Secured off-chain messaging. |
-| **Realtime** | **Socket.IO Client** | Bi-directional communication. |
-| **UI/UX** | **Tailwind** + **Framer Motion** | Glassmorphism & Animations. |
-| **3D** | **Three.js** | Visualizing channel state (optional). |
-
----
-
-## 📂 Project Structure
-
-```bash
-src/
-├── components/     # UI Atoms (Windows, Buttons, Inputs)
-├── config/         # Constants (Contracts, Chain ID)
-├── context/        # Global State (Session, OS Window Manager)
-├── hooks/          # Custom Hooks (useGameSigner, useENS)
-├── services/       # API & Socket Layers
-│   ├── messaging.service.ts  # Chat logic
-│   └── socket.ts             # Gateway connection
-├── state/          # Channel State Machines
-└── App.tsx         # Main OS Entry point
+// Defined in src/services/ai.service.ts
+export interface ChannelState {
+  channelId: string;      // Unique Identifier derived from User Address
+  nonce: number;          // Monotonically increasing counter to prevent replay attacks
+  userAddress: string;    // The EOA (Externally Owned Account)
+  serverAddress: string;  // The OS Backend Address
+  userBalance: string;    // Current User Funds (in Wei/MicroUDSC)
+  serverBalance: string;  // Current Server Enarnings (in Wei/MicroUSDC)
+  signature: string;      // Cryptographic signature of the state
+}
 ```
 
-## 📦 Setup & Run
+### State Transition Logic
+Every interaction (e.g., sending a chat message that costs money) follows this strict transition logic:
 
-1.  **Install Dependencies**:
+1.  **State Construction**: A deterministic string is created: `CHANNEL:{id}|NONCE:{n}|UBAL:{u}|SBAL:{s}`. *This format allows for simple verification without complex ABI encoding overhead.*
+2.  **Signing**: The client uses `viem`'s `signMessage` with the **Session Key** (not the main wallet) to sign this string.
+    > *Why Session Key?* To avoid popping up a MetaMask wallet signature request for every single chat message.
+3.  **Verification**: The backend recovers the address from the signature. If it matches the authorized session key for that channel, the transaction is processed.
+
+---
+
+## 🧩 Core Modules & Components
+
+### Session Management (`src/context/SessionContext.tsx`)
+This is the heart of the application's state channel implementation.
+- **Function**: Manages the lifecycle of the user's "Off-chain Session".
+- **Key Responsibilities**:
+  - `openChannel(amount)`: Simulates the on-chain deposit and instantiates the local state.
+  - `LocalAccount`: Uses `privateKeyToAccount` from `viem` to create a browser-only, secure signing key.
+  - `logs`: Tracks every cryptographic operation (`addLog`) to show the user the "proof" of their actions.
+
+### AI Integration (`src/services/ai.service.ts` & `AiChatModal.tsx`)
+Implements the "Pay-per-inference" model.
+- **Protocol Logic**:
+  - Manages the `requestInference` flow.
+  - Checks if the channel is solvent (User Balance > Cost).
+  - Handles the atomic swap of "Signed State" for "AI Intelligence".
+
+### P2P Gaming (`src/components/modals/ChessModal.tsx`)
+A wager-based chess game implementation with **Yellow** branding.
+- **Mechanism**:
+  - **Socket.io**: Used for move propagation.
+  - **State Channels**: Used for the wager. Players lock funds at the start. The game result acts as the "Adjudicator".
+
+### Secure Messaging (`src/services/messaging.service.ts`)
+A decentralized messaging layer integrated with **ENS**.
+- **ENS Integration**: Utilizes `wagmi` hooks to resolve Ethereum addresses to readable ENS names and fetch avatars.
+- **Architecture**: Socket-based real-time delivery authenticated by `signMessage`.
+
+---
+
+## 🛠 Technical Stack
+
+| Category | Technology | Purpose |
+|----------|------------|---------|
+| **Core Framework** | React 19 + Vite | Application logic and build system |
+| **Styling** | Tailwind CSS | Rapid, utility-first styling with "Yellow" branding |
+| **Web3 Primitives** | viem | Low-level cryptographic operations (Signing, Keys) |
+| **Wallet Connection** | Wagmi / RainbowKit | Connecting user wallets (MetaMask, etc.) |
+| **Real-time** | Socket.io Client | WebSocket connections for Games and Chat |
+| **3D Rendering** | Three.js / R3F | Immersive background elements (`Background3D`) |
+
+---
+
+## 💻 Installation & Setup
+
+Follow these steps to run the frontend locally:
+
+1.  **Clone the Repository**
+    ```bash
+    git clone https://github.com/GGLabs-Inc/YellowMeter_OS.git
+    cd YellowMeter_OS
+    ```
+
+2.  **Install Dependencies**
+    Ensure you have Node.js (v18+) installed.
     ```bash
     npm install
+    # or
+    yarn install
     ```
 
-2.  **Environment Setup**:
-    Create a `.env` file:
-    ```bash
-    VITE_BACKEND_URL=...
+3.  **Environment Setup**
+    Create a `.env` file in the root directory (optional for local dev if using mock services):
+    ```env
+    VITE_WALLET_CONNECT_PROJECT_ID=your_id_here
+    VITE_ALCHEMY_KEY=your_key_here
     ```
 
-3.  **Run Development Server**:
+4.  **Run Development Server**
     ```bash
     npm run dev
     ```
+    The application will be available at `http://localhost:5173`.
+
+5.  **Build for Production**
+    ```bash
+    npm run build
+    ```
 
 ---
-
-Created with ⚡ for ETHGlobal Hack Money 2026
+*Generated for YellowMeter OS Hackathon Project*
