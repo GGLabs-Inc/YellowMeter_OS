@@ -1,6 +1,6 @@
 import { Canvas } from '@react-three/fiber';
 import { Stars, Float } from '@react-three/drei';
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -9,21 +9,25 @@ const FloatingParticles = () => {
   const particles = useRef<THREE.Points>(null!);
   const particleCount = 100;
 
-  // Crear geometría de partículas
-  const positions = new Float32Array(particleCount * 3);
-  const colors = new Float32Array(particleCount * 3);
+  const [geoData, setGeoData] = useState<{positions: Float32Array, colors: Float32Array} | null>(null);
 
-  for (let i = 0; i < particleCount; i++) {
-    positions[i * 3] = (Math.random() - 0.5) * 50;
-    positions[i * 3 + 1] = (Math.random() - 0.5) * 50;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 20;
+  useEffect(() => {
+    const pos = new Float32Array(particleCount * 3);
+    const col = new Float32Array(particleCount * 3);
 
-    // Colores amarillo/ámbar
-    const yellowVariant = Math.random();
-    colors[i * 3] = 1; // R
-    colors[i * 3 + 1] = yellowVariant * 0.9 + 0.1; // G (amarillo a ámbar)
-    colors[i * 3 + 2] = 0; // B
-  }
+    for (let i = 0; i < particleCount; i++) {
+        pos[i * 3] = (Math.random() - 0.5) * 50;
+        pos[i * 3 + 1] = (Math.random() - 0.5) * 50;
+        pos[i * 3 + 2] = (Math.random() - 0.5) * 20;
+
+        // Colores amarillo/ámbar
+        const yellowVariant = Math.random();
+        col[i * 3] = 1; // R
+        col[i * 3 + 1] = yellowVariant * 0.9 + 0.1; // G (amarillo a ámbar)
+        col[i * 3 + 2] = 0; // B
+    }
+    setGeoData({ positions: pos, colors: col });
+  }, []);
 
   useFrame((state) => {
     if (particles.current) {
@@ -32,16 +36,18 @@ const FloatingParticles = () => {
     }
   });
 
+  if (!geoData) return null;
+
   return (
     <points ref={particles}>
       <bufferGeometry>
         <bufferAttribute
           attach="attributes-position"
-          args={[positions, 3]}
+          args={[geoData.positions, 3]}
         />
         <bufferAttribute
           attach="attributes-color"
-          args={[colors, 3]}
+          args={[geoData.colors, 3]}
         />
       </bufferGeometry>
       <pointsMaterial

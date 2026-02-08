@@ -1,0 +1,139 @@
+
+> frontend@0.0.0 lint
+> eslint .
+
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\3d\Background3D.tsx
+  18:23  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\3d\Background3D.tsx:18:23
+  16 |
+  17 |     for (let i = 0; i < particleCount; i++) {
+> 18 |         pos[i * 3] = (Math.random() - 0.5) * 50;
+     |                       ^^^^^^^^^^^^^ Cannot call impure function
+  19 |         pos[i * 3 + 1] = (Math.random() - 0.5) * 50;
+  20 |         pos[i * 3 + 2] = (Math.random() - 0.5) * 20;
+  21 |                                        react-hooks/purity
+  19:27  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\3d\Background3D.tsx:19:27
+  17 |     for (let i = 0; i < particleCount; i++) {
+  18 |         pos[i * 3] = (Math.random() - 0.5) * 50;
+> 19 |         pos[i * 3 + 1] = (Math.random() - 0.5) * 50;
+     |                           ^^^^^^^^^^^^^ Cannot call impure function
+  20 |         pos[i * 3 + 2] = (Math.random() - 0.5) * 20;
+  21 |
+  22 |         // Colores amarillo/├ímbar  react-hooks/purity
+  20:27  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\3d\Background3D.tsx:20:27
+  18 |         pos[i * 3] = (Math.random() - 0.5) * 50;
+  19 |         pos[i * 3 + 1] = (Math.random() - 0.5) * 50;
+> 20 |         pos[i * 3 + 2] = (Math.random() - 0.5) * 20;
+     |                           ^^^^^^^^^^^^^ Cannot call impure function
+  21 |
+  22 |         // Colores amarillo/├ímbar
+  23 |         const yellowVariant = Math.random();   react-hooks/purity
+  23:31  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\3d\Background3D.tsx:23:31
+  21 |
+  22 |         // Colores amarillo/├ímbar
+> 23 |         const yellowVariant = Math.random();
+     |                               ^^^^^^^^^^^^^ Cannot call impure function
+  24 |         col[i * 3] = 1; // R
+  25 |         col[i * 3 + 1] = yellowVariant * 0.9 + 0.1; // G (amarillo a ├ímbar)
+  26 |         col[i * 3 + 2] = 0; // B                react-hooks/purity
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\3d\HyperspeedBackground.tsx
+    1:18  error  'useMemo' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              @typescript-eslint/no-unused-vars
+   34:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\3d\HyperspeedBackground.tsx:34:5
+  32 |     
+  33 |     velocitiesRef.current = vels;
+> 34 |     setPositions(pos);
+     |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  35 |   }, [count, depth]);
+  36 |
+  37 |   useFrame((_state, delta) => {   react-hooks/set-state-in-effect
+  116:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\3d\HyperspeedBackground.tsx:116:5
+  114 |     
+  115 |     velocitiesRef.current = vels;
+> 116 |     setPositions(pos);
+      |     ^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  117 |   }, [count]);
+  118 |
+  119 |   useFrame((_state, delta) => {  react-hooks/set-state-in-effect
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\3d\PixelBlast.tsx
+  170:13  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\3d\PixelBlast.tsx:170:13
+  168 |       positions.push({
+  169 |         x: Math.cos(angle) * radius,
+> 170 |         y: (Math.random() - 0.5) * 10,
+      |             ^^^^^^^^^^^^^ Cannot call impure function
+  171 |         z: Math.sin(angle) * radius - 30,
+  172 |         speedBonus: 0.8 + Math.random() * 0.4
+  173 |       });  react-hooks/purity
+  172:27  error  Error: Cannot call impure function during render
+
+`Math.random` is an impure function. Calling an impure function can produce unstable results that update unpredictably when the component happens to re-render. (https://react.dev/reference/rules/components-and-hooks-must-be-pure#components-and-hooks-must-be-idempotent).
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\3d\PixelBlast.tsx:172:27
+  170 |         y: (Math.random() - 0.5) * 10,
+  171 |         z: Math.sin(angle) * radius - 30,
+> 172 |         speedBonus: 0.8 + Math.random() * 0.4
+      |                           ^^^^^^^^^^^^^ Cannot call impure function
+  173 |       });
+  174 |     }
+  175 |     return positions;                    react-hooks/purity
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\canvas\Experience.tsx
+   4:1   error  Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+   9:31  error  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  10:22  error  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  11:30  error  Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\dom\DemoDashboard.tsx
+  152:81  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\modals\AiChatModal.tsx
+  149:21  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\modals\DepositModal.tsx
+  86:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\components\modals\SettlementModal.tsx
+  81:48  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\OMAR\Documents\OMAR\2026 ACTIVIDADES\1. HACK MONEY\Yellow\Proyecto\Backend\YellowMeter_OS\src\services\messaging.service.ts
+  18:12  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Γ£û 18 problems (18 errors, 0 warnings)
+

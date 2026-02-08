@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -20,6 +20,12 @@ interface Pixel {
   color: THREE.Color;
 }
 
+interface BufferData {
+    positions: Float32Array;
+    colors: Float32Array;
+    sizes: Float32Array;
+}
+
 const PixelBlastEffect = ({
   pixelCount = 1000,
   speed = 1,
@@ -29,9 +35,10 @@ const PixelBlastEffect = ({
   const pointsRef = useRef<THREE.Points>(null!);
   const pixelsRef = useRef<Pixel[]>([]);
   const timeRef = useRef(0);
+  const [bufferData, setBufferData] = useState<BufferData | null>(null);
 
   // Inicializar píxeles
-  useMemo(() => {
+  useEffect(() => {
     const pixels: Pixel[] = [];
     const baseColor = new THREE.Color(color);
 
@@ -56,7 +63,6 @@ const PixelBlastEffect = ({
     }
 
     pixelsRef.current = pixels;
-    return pixels;
   }, [pixelCount, explosionRadius, color]);
 
   useFrame((_state, delta) => {
@@ -118,33 +124,35 @@ const PixelBlastEffect = ({
     pointsRef.current.geometry.attributes.size.needsUpdate = true;
   });
 
-  const [positions, colors, sizes] = useMemo(() => {
-    const positions = new Float32Array(pixelCount * 3);
-    const colors = new Float32Array(pixelCount * 3);
-    const sizes = new Float32Array(pixelCount);
+  useEffect(() => {
+    const pos = new Float32Array(pixelCount * 3);
+    const cols = new Float32Array(pixelCount * 3);
+    const szs = new Float32Array(pixelCount);
 
     for (let i = 0; i < pixelCount; i++) {
-      positions[i * 3] = 0;
-      positions[i * 3 + 1] = 0;
-      positions[i * 3 + 2] = 0;
+      pos[i * 3] = 0;
+      pos[i * 3 + 1] = 0;
+      pos[i * 3 + 2] = 0;
 
       const baseColor = new THREE.Color(color);
-      colors[i * 3] = baseColor.r;
-      colors[i * 3 + 1] = baseColor.g;
-      colors[i * 3 + 2] = baseColor.b;
+      cols[i * 3] = baseColor.r;
+      cols[i * 3 + 1] = baseColor.g;
+      cols[i * 3 + 2] = baseColor.b;
 
-      sizes[i] = 0.1;
+      szs[i] = 0.1;
     }
 
-    return [positions, colors, sizes];
+    setBufferData({ positions: pos, colors: cols, sizes: szs });
   }, [pixelCount, color]);
+
+  if (!bufferData) return null;
 
   return (
     <points ref={pointsRef}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
-        <bufferAttribute attach="attributes-color" args={[colors, 3]} />
-        <bufferAttribute attach="attributes-size" args={[sizes, 1]} />
+        <bufferAttribute attach="attributes-position" args={[bufferData.positions, 3]} />
+        <bufferAttribute attach="attributes-color" args={[bufferData.colors, 3]} />
+        <bufferAttribute attach="attributes-size" args={[bufferData.sizes, 1]} />
       </bufferGeometry>
       <pointsMaterial
         size={0.15}
@@ -160,9 +168,18 @@ const PixelBlastEffect = ({
 };
 
 // Múltiples explosiones simultáneas
+interface ExplosionPos {
+    x: number;
+    y: number;
+    z: number;
+    speedBonus: number;
+}
+
 const MultiBlast = ({ count = 3, color = '#ffe600', speed = 1 }: { count?: number; color?: string; speed?: number }) => {
-  const explosions = useMemo(() => {
-    const positions = [];
+  const [explosions, setExplosions] = useState<ExplosionPos[]>([]);
+
+  useEffect(() => {
+    const positions: ExplosionPos[] = [];
     for (let i = 0; i < count; i++) {
       const angle = (i / count) * Math.PI * 2;
       const radius = 15;
@@ -170,9 +187,10 @@ const MultiBlast = ({ count = 3, color = '#ffe600', speed = 1 }: { count?: numbe
         x: Math.cos(angle) * radius,
         y: (Math.random() - 0.5) * 10,
         z: Math.sin(angle) * radius - 30,
+        speedBonus: 0.8 + Math.random() * 0.4
       });
     }
-    return positions;
+    setExplosions(positions);
   }, [count]);
 
   return (
@@ -181,7 +199,7 @@ const MultiBlast = ({ count = 3, color = '#ffe600', speed = 1 }: { count?: numbe
         <group key={i} position={[pos.x, pos.y, pos.z]}>
           <PixelBlastEffect 
             pixelCount={300} 
-            speed={speed * (0.8 + Math.random() * 0.4)} 
+            speed={speed * pos.speedBonus} 
             explosionRadius={8}
             color={color}
           />

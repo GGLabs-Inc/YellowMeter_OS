@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bot, Code2, Trophy, CandlestickChart } from 'lucide-react';
+import { Bot, Code2, Trophy, CandlestickChart, MessageCircle } from 'lucide-react';
 import { DashboardCard } from '../ui/DashboardCard';
 import { useSession } from '../../context/SessionContext';
 import { DepositModal } from '../modals/DepositModal';
@@ -8,7 +8,9 @@ import { AiChatModal } from '../modals/AiChatModal';
 import { MicroApiModal } from '../modals/MicroApiModal';
 import { GamesHubModal } from '../modals/GamesHubModal';
 import { TradingModal } from '../modals/TradingModal';
+import { MessagingModal } from '../modals/MessagingModal';
 
+// Componente principal del Dashboard
 export function Dashboard() {
   const { isChannelOpen } = useSession();
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -17,6 +19,7 @@ export function Dashboard() {
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
   const [isGamesHubOpen, setIsGamesHubOpen] = useState(false);
   const [isTradingModalOpen, setIsTradingModalOpen] = useState(false);
+  const [isMessagingModalOpen, setIsMessagingModalOpen] = useState(false);
   const [selectedStake, setSelectedStake] = useState(10);
 
   const handleAppClick = (appName: string) => {
@@ -33,6 +36,8 @@ export function Dashboard() {
         setIsApiModalOpen(true);
     } else if (appName === 'Trading') {
         setIsTradingModalOpen(true);
+    } else if (appName === 'Messaging') {
+        setIsMessagingModalOpen(true);
     }
   };
 
@@ -47,6 +52,17 @@ export function Dashboard() {
     <>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-6xl mx-auto px-4">
         
+        {/* NEW 0. Messaging Chat */}
+        <DashboardCard
+          title="Chat de Mensajería"
+          price="Free"
+          description="Busca perfiles de amigos en ENS y chatea con la seguridad de Yellow."
+          whyYellow="Identidad unificada y privacidad garantizada por la red."
+          buttonText="Buscar y Chatear"
+          icon={<MessageCircle size={24} />}
+          onClick={() => handleAppClick('Messaging')}
+        />
+
         {/* 1. AI Inference */}
         <DashboardCard
           title="AI Inference"
@@ -115,6 +131,11 @@ export function Dashboard() {
       <MicroApiModal
         isOpen={isApiModalOpen}
         onClose={() => setIsApiModalOpen(false)}
+      />
+
+       <MessagingModal 
+          isOpen={isMessagingModalOpen}
+          onClose={() => setIsMessagingModalOpen(false)}
       />
 
       <GamesHubModal

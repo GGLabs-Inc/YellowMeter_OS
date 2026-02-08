@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -11,33 +11,34 @@ interface StarProps {
 
 const HyperspeedStars = ({ count = 5000, speed = 1, depth = 100, color = '#ffe600' }: StarProps) => {
   const points = useRef<THREE.Points>(null!);
+  const velocitiesRef = useRef<Float32Array>(new Float32Array(0));
+  const [positions, setPositions] = useState<Float32Array>(new Float32Array(0));
 
-  // Generar posiciones y velocidades aleatorias
-  const [positions, velocities] = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    const velocities = new Float32Array(count);
+  useEffect(() => {
+    const pos = new Float32Array(count * 3);
+    const vels = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
       const i3 = i * 3;
-      // Posición inicial aleatoria en un cilindro
       const radius = Math.random() * 20;
       const theta = Math.random() * Math.PI * 2;
       
-      positions[i3] = Math.cos(theta) * radius; // x
-      positions[i3 + 1] = Math.sin(theta) * radius; // y
-      positions[i3 + 2] = (Math.random() - 0.5) * depth; // z
+      pos[i3] = Math.cos(theta) * radius; // x
+      pos[i3 + 1] = Math.sin(theta) * radius; // y
+      pos[i3 + 2] = (Math.random() - 0.5) * depth; // z
       
-      // Velocidad aleatoria
-      velocities[i] = Math.random() * 0.5 + 0.5;
+      vels[i] = Math.random() * 0.5 + 0.5;
     }
-
-    return [positions, velocities];
+    
+    velocitiesRef.current = vels;
+    setPositions(pos);
   }, [count, depth]);
 
   useFrame((_state, delta) => {
     if (!points.current) return;
 
     const positions = points.current.geometry.attributes.position.array as Float32Array;
+    const velocities = velocitiesRef.current;
 
     for (let i = 0; i < count; i++) {
       const i3 = i * 3;
@@ -83,10 +84,12 @@ const HyperspeedStars = ({ count = 5000, speed = 1, depth = 100, color = '#ffe60
 // Componente de líneas de velocidad (trails)
 const SpeedLines = ({ count = 100, speed = 2, color = '#ffe600' }: StarProps) => {
   const linesRef = useRef<THREE.LineSegments>(null!);
+  const velocitiesRef = useRef<Float32Array>(new Float32Array(0));
+  const [positions, setPositions] = useState<Float32Array>(new Float32Array(0));
 
-  const [positions, velocities] = useMemo(() => {
-    const positions = new Float32Array(count * 6); // 2 puntos por línea (inicio y fin)
-    const velocities = new Float32Array(count);
+  useEffect(() => {
+    const pos = new Float32Array(count * 6);
+    const vels = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
       const i6 = i * 6;
@@ -97,25 +100,27 @@ const SpeedLines = ({ count = 100, speed = 2, color = '#ffe600' }: StarProps) =>
       const z = (Math.random() - 0.5) * 100;
 
       // Punto inicial
-      positions[i6] = x;
-      positions[i6 + 1] = y;
-      positions[i6 + 2] = z;
+      pos[i6] = x;
+      pos[i6 + 1] = y;
+      pos[i6 + 2] = z;
 
       // Punto final (más atrás para crear la línea)
-      positions[i6 + 3] = x;
-      positions[i6 + 4] = y;
-      positions[i6 + 5] = z - Math.random() * 2 - 1;
+      pos[i6 + 3] = x;
+      pos[i6 + 4] = y;
+      pos[i6 + 5] = z - Math.random() * 2 - 1;
 
-      velocities[i] = Math.random() * 0.8 + 0.4;
+      vels[i] = Math.random() * 0.8 + 0.4;
     }
-
-    return [positions, velocities];
+    
+    velocitiesRef.current = vels;
+    setPositions(pos);
   }, [count]);
 
   useFrame((_state, delta) => {
     if (!linesRef.current) return;
 
     const positions = linesRef.current.geometry.attributes.position.array as Float32Array;
+    const velocities = velocitiesRef.current;
 
     for (let i = 0; i < count; i++) {
       const i6 = i * 6;

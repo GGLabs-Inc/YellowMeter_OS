@@ -12,13 +12,15 @@ interface TradingModalProps {
 const BIDS = Array.from({ length: 8 }, (_, i) => ({
     price: 2845.20 - (i * 0.15),
     size: (Math.random() * 2 + 0.1).toFixed(3),
-    total: (Math.random() * 10 + 1).toFixed(2)
+    total: (Math.random() * 10 + 1).toFixed(2),
+    width: Math.floor(Math.random() * 100)
 }));
 
 const ASKS = Array.from({ length: 8 }, (_, i) => ({
     price: 2845.50 + (i * 0.15),
     size: (Math.random() * 2 + 0.1).toFixed(3),
-    total: (Math.random() * 10 + 1).toFixed(2)
+    total: (Math.random() * 10 + 1).toFixed(2),
+    width: Math.floor(Math.random() * 100)
 })).reverse();
 
 export function TradingModal({ isOpen, onClose }: TradingModalProps) {
@@ -121,7 +123,7 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
                              <div key={i} className="flex justify-between px-3 py-0.5 hover:bg-[#333]/50 cursor-pointer text-red-400 relative">
                                  <span className="z-10">{ask.price.toFixed(2)}</span>
                                  <span className="z-10 text-gray-400">{ask.size}</span>
-                                 <div className="absolute right-0 top-0 bottom-0 bg-red-900/10" style={{ width: `${Math.random() * 100}%`}}></div>
+                                 <div className="absolute right-0 top-0 bottom-0 bg-red-900/10" style={{ width: `${ask.width}%`}}></div>
                              </div>
                          ))}
                     </div>
@@ -137,7 +139,7 @@ export function TradingModal({ isOpen, onClose }: TradingModalProps) {
                              <div key={i} className="flex justify-between px-3 py-0.5 hover:bg-[#333]/50 cursor-pointer text-green-400 relative">
                                  <span className="z-10">{bid.price.toFixed(2)}</span>
                                  <span className="z-10 text-gray-400">{bid.size}</span>
-                                 <div className="absolute right-0 top-0 bottom-0 bg-green-900/10" style={{ width: `${Math.random() * 100}%`}}></div>
+                                 <div className="absolute right-0 top-0 bottom-0 bg-green-900/10" style={{ width: `${bid.width}%`}}></div>
                              </div>
                          ))}
                     </div>

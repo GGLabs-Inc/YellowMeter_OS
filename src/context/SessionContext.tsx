@@ -164,6 +164,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// eslint-disable-next-line
 export function useSession() {
   const context = useContext(SessionContext);
   if (context === undefined) {

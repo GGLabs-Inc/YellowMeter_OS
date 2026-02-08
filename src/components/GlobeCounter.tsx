@@ -248,11 +248,14 @@ export default function GlobeCounter({
 
     // Rotation speed
     rotationRef.current += activeSession ? 0.3 : 0.1;
-    animFrameRef.current = requestAnimationFrame(drawGlobe);
   }, [activeSession]);
 
   useEffect(() => {
-    animFrameRef.current = requestAnimationFrame(drawGlobe);
+    const loop = () => {
+        drawGlobe();
+        animFrameRef.current = requestAnimationFrame(loop);
+    };
+    loop();
     return () => cancelAnimationFrame(animFrameRef.current);
   }, [drawGlobe]);
 

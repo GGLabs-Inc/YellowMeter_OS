@@ -21,6 +21,15 @@ interface HyperspeedProps {
   };
 }
 
+interface RoadProps {
+  roadWidth?: number;
+  islandWidth?: number;
+  roadLength?: number;
+  speed?: number;
+  roadColor?: number;
+  islandColor?: number;
+}
+
 // Carretera principal
 const Road = ({ 
   roadWidth = 10, 
@@ -29,7 +38,7 @@ const Road = ({
   speed = 2,
   roadColor = 0x101010,
   islandColor = 0x0a0a0a
-}: any) => {
+}: RoadProps) => {
   const roadLeftRef = useRef<THREE.Mesh>(null!);
   const roadRightRef = useRef<THREE.Mesh>(null!);
   const islandRef = useRef<THREE.Mesh>(null!);
@@ -78,6 +87,15 @@ const Road = ({
   );
 };
 
+interface RoadLinesProps {
+  roadWidth?: number;
+  islandWidth?: number;
+  roadLength?: number;
+  speed?: number;
+  shoulderColor?: number;
+  brokenColor?: number;
+}
+
 // Líneas de la carretera
 const RoadLines = ({ 
   roadWidth = 10, 
@@ -86,7 +104,7 @@ const RoadLines = ({
   speed = 2,
   shoulderColor = 0xffe600,
   brokenColor = 0xffe600
-}: any) => {
+}: RoadLinesProps) => {
   const linesRef = useRef<THREE.Group>(null!);
 
   useFrame(() => {
@@ -149,6 +167,15 @@ const RoadLines = ({
   return <group ref={linesRef}>{lines}</group>;
 };
 
+interface LightSticksProps {
+  roadWidth?: number;
+  islandWidth?: number;
+  roadLength?: number;
+  speed?: number;
+  totalSticks?: number;
+  color?: number;
+}
+
 // Luces laterales (light sticks)
 const LightSticks = ({ 
   roadWidth = 10, 
@@ -157,7 +184,7 @@ const LightSticks = ({
   speed = 2,
   totalSticks = 20,
   color = 0xffe600
-}: any) => {
+}: LightSticksProps) => {
   const sticksRef = useRef<THREE.Group>(null!);
 
   useFrame(() => {
