@@ -88,7 +88,7 @@ const shortenAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)
 
 
 export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
-  const { sessionAccount, balance, addLog, isChannelOpen } = useSession(); // Añadido isChannelOpen
+  const { sessionAccount, balance, addLog, isChannelOpen } = useSession(); // Added isChannelOpen
   const { address: mainAddress } = useAccount();
   const chatEndRef = useRef<HTMLDivElement>(null);
   const publicClient = usePublicClient();
@@ -142,7 +142,7 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
         const formattedList: Conversation[] = list.map(item => ({
             peerAddress: item.peerAddress,
             peerEns: item.peerEns,
-            lastMessage: item.lastMessage || 'Nueva conversación',
+            lastMessage: item.lastMessage || 'New conversation',
             timestamp: item.timestamp || Date.now(),
             unreadCount: item.unreadCount
         }));
@@ -152,27 +152,27 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
 
     // 1. Connect to Gateway & Load Data
     useEffect(() => {
-      // REQUISITO: Verificar que sessionAccount y isChannelOpen son válidos
+      // REQUIREMENT: Verify that sessionAccount and isChannelOpen are valid
       if (sessionAccount && isChannelOpen) {
           console.log("🟢 Channel Open & Session Ready: Connecting to Messaging...");
           messagingService.connect(sessionAccount.address);
           
-          // FORZAR CARGA INMEDIATA
+          // FORCE IMMEDIATE LOAD
           loadConversations(); 
           
-          // Polling fallback - Reducido a 3s para mejor UX en demo
+          // Polling fallback - Reduced to 3s for better UX in demo
           const interval = setInterval(loadConversations, 3000); 
   
           messagingService.on('incomingMessage', () => {
                loadConversations();
           });
           return () => { 
-              // console.log("🔴 Disconnecting Messaging..."); // Comentado para evitar log noise
+              // console.log("🔴 Disconnecting Messaging..."); // Commented out to avoid log noise
               messagingService.off('incomingMessage'); 
               clearInterval(interval);
           }
       } else {
-          // Si no hay canal abierto, asegurarnos de limpiar
+          // If no channel open, ensure signup/cleanup
           setConversations([]);
           setMessages([]);
       }
@@ -182,7 +182,7 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
     const handleSelectConversation = async (address: string, ensName?: string | null) => {
         setPeerAddress(address);
         if (ensName) {
-            console.log("✅ ENS Seleccionado manualmente:", ensName);
+            console.log("✅ ENS Selected manually:", ensName);
             setManualPeerEns(ensName); 
         }
         else setManualPeerEns(null);
@@ -241,7 +241,7 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
               console.log("Selecionado search result:", address);
               setSearchResult({ address, name, avatar: avatar || null });
           } else {
-              alert("Usuario no encontrado.");
+              alert("User not found.");
           }
   
       } catch (error) {
@@ -258,7 +258,7 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
     const COST = 0.0001;
 
     if (balance < COST) {
-        alert("Fondos insuficientes.");
+        alert("Insufficient funds.");
         setIsSending(false);
         return;
     }
@@ -291,7 +291,7 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
             peerEnsName || undefined
         );
 
-        addLog("Mensaje Enviado", COST, signature);
+        addLog("Message Sent", COST, signature);
         
         const localMsg: ChatMessage = {
             id: crypto.randomUUID(),
@@ -368,9 +368,9 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
                                 </div>
                             )}
                             <div>
-                                <div className="text-sm font-bold text-white">{searchResult.name || "Usuario"}</div>
+                                <div className="text-sm font-bold text-white">{searchResult.name || "User"}</div>
                                 <div className="text-xs text-yellow-500 font-mono">{shortenAddress(searchResult.address)}</div>
-                                <div className="text-[10px] text-gray-400 mt-1">Clic para chatear</div>
+                                <div className="text-[10px] text-gray-400 mt-1">Click to chat</div>
                             </div>
                         </div>
                     </div>
@@ -379,7 +379,7 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
                 {conversations.length === 0 && !searchResult ? (
                     <div className="p-6 text-center text-gray-500 text-xs">
                         No hay conversaciones recientes.
-                        <br/>Busca un usuario para empezar.
+                        <br/>Search for a user to start.
                     </div>
                 ) : (
                     conversations.map((conv, idx) => (
@@ -438,8 +438,8 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
                     <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-4 opacity-70">
                         <ScanFace size={64} className="text-yellow-500/30" />
                         <div className="text-center">
-                            <p className="text-lg font-medium text-gray-400">Busca un perfil ENS para comenzar</p>
-                            <p className="text-sm mt-2">Cada mensaje está criptográficamente firmado y verificado.</p>
+                            <p className="text-lg font-medium text-gray-400">Search an ENS profile to start</p>
+                            <p className="text-sm mt-2">Each message is cryptographically signed and verified.</p>
                         </div>
                     </div>
                 ) : (
@@ -478,7 +478,7 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
                     </div>
                     <input 
                         type="text" 
-                        placeholder={peerAddress ? "Escribe un mensaje cifrado..." : "Selecciona un contacto primero"}
+                        placeholder={peerAddress ? "Type an encrypted message..." : "Select a contact first"}
                         className="w-full bg-black/60 border border-white/10 rounded-full py-4 pl-12 pr-14 text-base text-white focus:outline-none focus:border-yellow-500/50 focus:ring-1 focus:ring-yellow-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed placeholder-gray-500"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}

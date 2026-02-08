@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { Modal } from '../ui/Modal';
 import { useSession } from '../../context/SessionContext';
 import { Send, Bot, Cpu, ChevronDown, Check, Settings2 } from 'lucide-react';
-import { aiService } from '../../services/ai.service'; // Importar servicio nuevo
+import { aiService } from '../../services/ai.service'; // Import new service
 
 interface AiChatModalProps {
   isOpen: boolean;
@@ -80,7 +80,7 @@ const ALL_MODELS = MODEL_GROUPS.flatMap(g => g.items);
 export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
   const { addLog, balance, actionsCount, sessionAccount } = useSession();
   const [messages, setMessages] = useState<Message[]>([
-    { id: '1', sender: 'bot', text: 'Hola, soy YellowBot. Paga por uso para chatear conmigo.' }
+    { id: '1', sender: 'bot', text: 'Hi, I am YellowBot. Pay-per-use to chat with me.' }
   ]);
   const [inputText, setInputText] = useState('');
   const [selectedModel, setSelectedModel] = useState(ALL_MODELS.find(m => m.id === 'gemini-3-pro') || ALL_MODELS[0]);
@@ -171,11 +171,11 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
         {/* Real-time Stats */}
         <div className="flex gap-6">
             <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Balance Real</span>
+                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Real Balance</span>
                 <span className="text-white font-mono font-bold text-sm">{balance.toFixed(4)} USDC</span>
             </div>
             <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Firmas</span>
+                <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Signatures</span>
                 <span className="text-yellow-500 font-mono font-bold text-sm">{actionsCount}</span>
             </div>
         </div>
@@ -293,7 +293,7 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                         value={inputText}
                         onChange={(e) => setInputText(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder="Escribe tu consulta..."
+                        placeholder="Type your query..."
                         className="w-full bg-[#15171e] text-white border border-white/10 rounded-lg pl-4 pr-32 py-2 text-sm focus:outline-none focus:border-yellow-500/50 transition-colors placeholder-gray-600 h-full"
                     />
                     
@@ -306,7 +306,7 @@ export function AiChatModal({ isOpen, onClose }: AiChatModalProps) {
                     onClick={handleSend}
                     className="w-full bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
                 >
-                    <span>Enviar</span>
+                    <span>Send</span>
                     <Send size={16} />
                 </button>
         </div>
