@@ -93,18 +93,18 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="1. Depositar Fondos">
+    <Modal isOpen={isOpen} onClose={onClose} title="1. Deposit Funds">
       
       {/* Info Box */}
       <div className="bg-green-900/20 border border-green-500/20 rounded-lg p-4 mb-6">
         <div className="flex gap-3">
           <Info className="text-green-500 shrink-0 mt-0.5" size={20} />
           <div className="space-y-1">
-            <h4 className="text-sm font-bold text-green-400">Transacción Real (Sepolia Testnode)</h4>
+            <h4 className="text-sm font-bold text-green-400">Real Transaction (Sepolia Testnode)</h4>
             <p className="text-xs text-green-200/70 leading-relaxed">
-              Esta acción enviará dos transacciones a tu wallet:
-              <br/>1. <b>Approve:</b> Permitir que Yellow mueva tus USDC.
-              <br/>2. <b>Deposit:</b> Enviar los fondos al contrato Adjudicator.
+              This action will send two transactions to your wallet:
+              <br/>1. <b>Approve:</b> Allow Yellow to move your USDC.
+              <br/>2. <b>Deposit:</b> Send funds to the Adjudicator contract.
             </p>
           </div>
         </div>
@@ -113,7 +113,7 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
       {/* Input Section */}
       <div className="space-y-4 mb-6">
         <label className="block text-sm font-medium text-gray-400">
-          Monto a Custodiar (USDC en Sepolia)
+          Amount to Custody (USDC on Sepolia)
         </label>
         <div className="relative">
           <input
@@ -147,15 +147,15 @@ export function DepositModal({ isOpen, onClose }: DepositModalProps) {
           <>
             <Loader2 className="animate-spin relative z-10" />
             <span className="relative z-10">
-                {step === 'approving' && 'Aprobando (1/2)...'}
-                {step === 'depositing' && 'Depositando (2/2)...'}
-                {step === 'confirming' && 'Confirmando...'}
+                {step === 'approving' && 'Approving (1/2)...'}
+                {step === 'depositing' && 'Depositing (2/2)...'}
+                {step === 'confirming' && 'Confirming...'}
             </span>
           </>
         ) : (
           <>
             <Lock size={20} className="relative z-10" />
-            <span className="relative z-10">Confirmar Depósito</span>
+            <span className="relative z-10">Confirm Deposit</span>
           </>
         )}
       </button>
