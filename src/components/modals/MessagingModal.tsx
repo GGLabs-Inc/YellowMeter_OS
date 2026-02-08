@@ -122,9 +122,6 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
     chainId: 1
   });
   
-  const [ensName, setEnsName] = useState<string | null>(null);
-  const [ensAvatar, setEnsAvatar] = useState<string | null>(null);
-  
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -427,7 +424,7 @@ export function MessagingModal({ isOpen, onClose }: MessagingModalProps) {
                 </div>
                 {peerAddress && (
                     <button 
-                        onClick={() => { setPeerAddress(null); setEnsName(null); }}
+                        onClick={() => { setPeerAddress(null); setManualPeerEns(null); }}
                         className="text-sm hover:text-red-400 text-gray-400 transition-colors font-medium border border-white/10 px-3 py-1 rounded-md hover:border-red-500/50"
                     >
                         Terminar Sesión
