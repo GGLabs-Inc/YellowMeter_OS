@@ -1,88 +1,102 @@
 # ⚡ YellowMeter OS (Frontend)
 
-Interfaz de usuario moderna construida con **React, Vite y TailwindCSS**. Diseñada para interactuar con la infraestructura de **Yellow Network**, permitiendo a los usuarios depositar fondos, firmar transacciones off-chain y liquidar ganancias en una experiencia "Cinemática".
+YellowMeter OS is a decentralized, browser-based Operating System designed to simplify Web3 interactions. It introduces a desktop-like interface where apps (Trading, Chess, Chat) interact seamlessly with the blockchain using **Session Keys** and **State Channels**.
 
-## ⚡ Tecnologías
+## 🚀 Live Demo
+**URL:** [https://yellow-meter-os.vercel.app/](https://yellow-meter-os.vercel.app/)
 
-*   **Framework**: React + Vite (TypeScript)
-*   **Web3**: Wagmi + Viem (Conexión a Sepolia)
-*   **Estilos**: TailwindCSS + Lucide Icons
-*   **Gestión de Estado**: Context API (`SessionContext`) persistente.
+---
 
-## 🌊 Flujos Principales
+## ⚡ Yellow Network Implementation
 
-### 1. Depósito (On-Chain)
-El usuario bloquea fondos en el contrato de custodia (`Adjudicator`) para abrir un canal.
-*   **Archivo**: `src/components/modals/DepositModal.tsx`
-*   **Acciones**:
-    1.  `USDC.approve(Adjudicator, amount)`
-    2.  `Adjudicator.deposit(user, token, amount)`
+This is the core innovation of the project. We moved beyond simple wallet signatures to extensive **Session Keys** implementation.
 
-### 2. Operación Off-Chain (AI Chat)
-El usuario interactúa con servicios (ej. Chatbot) sin pagar gas por mensaje.
-*   **Archivo**: `src/components/modals/AiChatModal.tsx`
-*   **Lógica**:
-    1.  Genera un estado local (Balance actual - Costo servicio).
-    2.  Crea un mensaje determinista: `CHANNEL:...|NONCE:...`.
-    3.  Firma el mensaje con su wallet (`viem`).
-    4.  Envía la firma al Backend para validación.
+### 1. Session Keys & Nitrolite Client
+Instead of asking the user to sign every single chess move or chat message (which ruins UX), we generate a temporary **Session Key** inside the browser.
 
-### 3. Persistencia de Sesión
-Para evitar pérdida de fondos al recargar la página, almacenamos las claves de sesión.
-*   **Archivo**: `src/context/SessionContext.tsx`
-*   **Storage**: `localStorage` guarda `sessionPrivateKey`, `balance`, y `logs`.
+*   **Logic**: `src/context/SessionContext.tsx`
+*   **Mechanism**:
+    1.  User "Deposits" funds to open a channel (On-Chain).
+    2.  Browser generates a specialized ephemeral private key using `viem`.
+    3.  This key is stored securely in local storage for the duration of the session.
+    4.  The Frontend signs **thousands** of micro-transactions automatically using this background key.
 
-### 4. Liquidación (Settlement)
-Cierre del canal y retiro de fondos. Implementa un **Retiro en 2 Pasos** para asegurar la liquidez.
-*   **Archivo**: `src/components/modals/SettlementModal.tsx`
-*   **Pasos**:
-    1.  **Withdraw**: Retira el 100% de los fondos depositados del contrato `Adjudicator`.
-    2.  **Fee Payment**: Envía una transferencia de USDC (`transfer`) a la wallet del servidor por el monto consumido.
+### 2. EIP-712 Typed Signatures (Strict Protocol)
+We use a strongly typed signing domain to ensure the backend can deterministically validate actions.
 
-## 🛠️ Configuración
-
-### Variables de Entorno (.env)
-
-Crea un archivo `.env` en la raíz del proyecto para conectar con el backend y servicios externos.
-
-```dotenv
-# Backend API (Local o Producción)
-# Local: http://localhost:3000
-# Producción: https://yellowmeter-backend.onrender.com
-VITE_BACKEND_URL=https://yellowmeter-backend.onrender.com
-```
-
-### Constantes Globales
-Las direcciones de contratos se encuentran en `src/config/constants.ts`:
-
+**Implementation (`src/hooks/useGameSigner.ts`):**
 ```typescript
-export const CONTRACTS = {
-  USDC: '0x1c...7238',
-  Adjudicator: '0x01...b262',
-  ServerWallet: '0x5C...35C' // Tesorería
+const types = {
+  GameMove: [
+    { name: 'gameId', type: 'string' },
+    { name: 'move', type: 'string' },
+    { name: 'nonce', type: 'uint256' },
+  ]
 };
 ```
+This ensures that every signed packet is unforgeable and strictly associated with the active Channel ID.
 
-## 🚀 Ejecución
+---
+
+## 🌐 ENS Integration (Identity)
+
+YellowMeter uses ENS as the primary identity layer. We believe users should interact with names, not hex strings.
+
+*   **Forward Resolution**: The Chat and Trading apps accept ENS names (`alice.eth`) and rely on **Wagmi** to resolve them to 0x addresses before initiating channels.
+*   **Reverse Resolution**: We display user avatars and names in the "OS Taskbar" and "Profile" sections.
+*   **Caching**: To improve performance, resolved names are cached in the local session state.
+
+---
+
+## 🛠 Tech Stack & Architecture
+
+This project is built as a Single Page Application (SPA) simulating a Desktop Environment.
+
+| Layer | Technology | Usage |
+| :--- | :--- | :--- |
+| **Framework** | **React 19** + **Vite** | Core application logic. |
+| **Blockchain** | **Viem** + **Wagmi** | Low-level interaction & Hooks. |
+| **State** | **React Context** | Managing the "OS" window manager. |
+| **Signatures** | **EIP-712** | Secured off-chain messaging. |
+| **Realtime** | **Socket.IO Client** | Bi-directional communication. |
+| **UI/UX** | **Tailwind** + **Framer Motion** | Glassmorphism & Animations. |
+| **3D** | **Three.js** | Visualizing channel state (optional). |
+
+---
+
+## 📂 Project Structure
 
 ```bash
-# Instalar dependencias
-npm install
-
-# Iniciar servidor de desarrollo
-npm run dev
-```
-
-## 📂 Estructura del Proyecto
-
-```
 src/
-├── components/
-│   ├── modals/       # Deposit, Settlement, AI Chat
-│   ├── layout/       # StateBar, Dashboard
-│   └── ui/           # Componentes base
-├── context/          # SessionContext (Estado Global)
-├── services/         # ai.service.ts (API Calls)
-├── config/           # Constantes Web3
-└── App.tsx           # Entry Point
+├── components/     # UI Atoms (Windows, Buttons, Inputs)
+├── config/         # Constants (Contracts, Chain ID)
+├── context/        # Global State (Session, OS Window Manager)
+├── hooks/          # Custom Hooks (useGameSigner, useENS)
+├── services/       # API & Socket Layers
+│   ├── messaging.service.ts  # Chat logic
+│   └── socket.ts             # Gateway connection
+├── state/          # Channel State Machines
+└── App.tsx         # Main OS Entry point
 ```
+
+## 📦 Setup & Run
+
+1.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+
+2.  **Environment Setup**:
+    Create a `.env` file:
+    ```bash
+    VITE_BACKEND_URL=...
+    ```
+
+3.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
+
+---
+
+Created with ⚡ for ETHGlobal Hack Money 2026
