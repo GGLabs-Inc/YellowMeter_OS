@@ -7,11 +7,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <div className="stars" aria-hidden="true"></div>
       
       {/* 
-        Aquí irá el Canvas 3D (Background L3)
+        3D Canvas goes here (Background L3)
       */}
       <Experience />
       
-      {/* Contenido DOM (L2) */}
+      {/* DOM Content (L2) */}
       <main className="wrap">
         {children}
       </main>

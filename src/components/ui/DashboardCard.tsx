@@ -72,7 +72,7 @@ export function DashboardCard({
       {/* Why Yellow Box */}
       <div className="bg-secondary/30 rounded-lg p-3 mb-6 border border-white/5">
         <p className="text-[10px] uppercase tracking-wider text-primary font-bold mb-1">
-          ¿Por qué Yellow?
+          Why Yellow?
         </p>
         <p className="text-xs text-gray-500 leading-relaxed">
           {whyYellow}

@@ -119,7 +119,7 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
     setPossibleMoves([]);
 
     const moveSan = moveResult.san;
-    const playerColor = moveResult.color === 'w' ? 'Blancas' : 'Negras';
+    const playerColor = moveResult.color === 'w' ? 'White' : 'Black';
 
     // Add increment after move
     if (moveResult.color === 'w') {
@@ -248,7 +248,7 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <Users className="text-yellow-500" size={20}/>
-                Modo: 2 Jugadores Local
+                Mode: 2 Players Local
               </h3>
               <div className="bg-[#15171e] p-6 rounded-xl border border-white/10">
                 <div className="space-y-4">
@@ -257,8 +257,8 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
                       <User size={24} className="text-gray-800"/>
                     </div>
                     <div>
-                      <div className="font-bold text-white">Jugador 1 - Blancas</div>
-                      <div className="text-xs text-gray-400">Mueve primero</div>
+                      <div className="font-bold text-white">Player 1 - White</div>
+                      <div className="text-xs text-gray-400">Moves first</div>
                     </div>
                   </div>
                   <div className="text-center text-gray-500 text-sm">VS</div>
@@ -267,15 +267,15 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
                       <User size={24} className="text-white"/>
                     </div>
                     <div>
-                      <div className="font-bold text-white">Jugador 2 - Negras</div>
-                      <div className="text-xs text-gray-400">Mueve segundo</div>
+                      <div className="font-bold text-white">Player 2 - Black</div>
+                      <div className="text-xs text-gray-400">Moves second</div>
                     </div>
                   </div>
                 </div>
                 <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                   <div className="text-xs text-yellow-400">
-                    <strong>Tip:</strong> Haz clic en una pieza para ver sus movimientos posibles. 
-                    Amarillo = movimiento válido, Rojo = captura.
+                    <strong>Tip:</strong> Click on a piece to see possible moves. 
+                    Yellow = valid move, Red = capture.
                   </div>
                 </div>
               </div>
@@ -285,7 +285,7 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <Clock className="text-blue-500" size={20}/>
-                Control de Tiempo
+                Time Control
               </h3>
               <div className="space-y-2">
                 {TIME_CONTROLS.map((tc) => (
@@ -302,7 +302,7 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
                       <div className="text-left">
                         <div className="font-bold text-white">{tc.label}</div>
                         <div className="text-xs text-gray-400">
-                          {Math.floor(tc.time / 60)} minutos{tc.increment > 0 ? ` + ${tc.increment}s incremento` : ''}
+                          {Math.floor(tc.time / 60)} minutes{tc.increment > 0 ? ` + ${tc.increment}s increment` : ''}
                         </div>
                       </div>
                       <Clock size={24} className={timeControl.label === tc.label ? 'text-blue-500' : 'text-gray-600'}/>
@@ -324,7 +324,7 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
                   onClick={startGame}
                   className="w-full py-4 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 text-black font-bold rounded-lg transition-all transform hover:scale-105 shadow-lg"
                 >
-                  Iniciar Partida
+                  Start Game
                 </button>
               </div>
             </div>
@@ -379,8 +379,8 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
                         <User size={20} className="text-white"/>
                     </div>
                     <div>
-                        <div className="text-sm font-bold text-white">Jugador 2 - Negras</div>
-                        <div className="text-xs text-gray-500">{game.turn() === 'b' ? '⚡ Tu turno' : 'Esperando...'}</div>
+                        <div className="text-sm font-bold text-white">Player 2 - Black</div>
+                        <div className="text-xs text-gray-500">{game.turn() === 'b' ? '⚡ Your turn' : 'Waiting...'}</div>
                     </div>
                 </div>
                 <div className={`flex items-center gap-2 bg-[#1a1d24] px-3 py-1.5 rounded-md border ${
@@ -415,8 +415,8 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
                         <User size={20} className="text-yellow-500"/>
                     </div>
                     <div>
-                        <div className="text-sm font-bold text-white">Jugador 1 - Blancas</div>
-                        <div className="text-xs text-gray-500">{game.turn() === 'w' ? '⚡ Tu turno' : 'Esperando...'}</div>
+                        <div className="text-sm font-bold text-white">Player 1 - White</div>
+                        <div className="text-xs text-gray-500">{game.turn() === 'w' ? '⚡ Your turn' : 'Waiting...'}</div>
                     </div>
                 </div>
                 <div className={`flex items-center gap-2 bg-[#1a1d24] px-3 py-1.5 rounded-md border ${
@@ -431,35 +431,35 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
         {/* RIGHT: Actions */}
         <div className="lg:col-span-3 flex flex-col gap-4">
             <div className="bg-[#15171e] p-4 rounded-xl border border-white/10 h-full flex flex-col">
-                <h4 className="text-sm font-bold text-gray-400 uppercase mb-4">Información de Partida</h4>
+                <h4 className="text-sm font-bold text-gray-400 uppercase mb-4">Game Information</h4>
                 
                 <div className="space-y-3 mb-4">
                   <div className="p-3 bg-black/40 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Control de Tiempo</div>
+                    <div className="text-xs text-gray-500 mb-1">Time Control</div>
                     <div className="text-sm font-bold text-white">{timeControl.label}</div>
                   </div>
                   
                   <div className="p-3 bg-black/40 rounded-lg">
-                    <div className="text-xs text-gray-500 mb-1">Modo de Juego</div>
-                    <div className="text-sm font-bold text-yellow-400">2 Jugadores Local</div>
-                    <div className="text-xs text-gray-500">Turno de: {game.turn() === 'w' ? 'Blancas' : 'Negras'}</div>
+                    <div className="text-xs text-gray-500 mb-1">Game Mode</div>
+                    <div className="text-sm font-bold text-yellow-400">2 Players Local</div>
+                    <div className="text-xs text-gray-500">Turn: {game.turn() === 'w' ? 'White' : 'Black'}</div>
                   </div>
 
                   <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg">
                     <div className="text-xs text-blue-400">
-                      <strong>Ayuda:</strong> Haz clic en una pieza para ver sus movimientos. 
-                      <span className="text-yellow-400"> Amarillo</span> = mover, 
-                      <span className="text-red-400"> Rojo</span> = capturar.
+                      <strong>Help:</strong> Click on a piece to see its moves. 
+                      <span className="text-yellow-400"> Yellow</span> = move, 
+                      <span className="text-red-400"> Red</span> = capture.
                     </div>
                   </div>
 
                   {gameStatus === 'FINISHED' && (
                     <div className="p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
                       <div className="text-sm font-bold text-yellow-400 text-center">
-                        {whiteTimer <= 0 ? '¡Tiempo agotado! Negras ganan' :
-                         blackTimer <= 0 ? '¡Tiempo agotado! Blancas ganan' :
-                         game.isCheckmate() ? `¡Jaque mate! ${game.turn() === 'w' ? 'Negras' : 'Blancas'} ganan` :
-                         game.isDraw() ? '¡Tablas!' : 'Juego terminado'}
+                        {whiteTimer <= 0 ? 'Timeout! Black wins' :
+                         blackTimer <= 0 ? 'Timeout! White wins' :
+                         game.isCheckmate() ? `Checkmate! ${game.turn() === 'w' ? 'Black' : 'White'} wins` :
+                         game.isDraw() ? 'Draw!' : 'Game Over'}
                       </div>
                     </div>
                   )}
@@ -470,7 +470,7 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
                       onClick={() => setGameStatus('FINISHED')}
                       className="w-full flex items-center justify-between p-3 bg-red-900/20 hover:bg-red-900/30 border border-red-500/30 rounded-lg text-red-400 transition-colors"
                     >
-                        <span className="text-sm font-bold">Rendirse</span>
+                        <span className="text-sm font-bold">Resign</span>
                         <Flag size={18}/>
                     </button>
                     
@@ -478,7 +478,7 @@ export function ChessModal({ isOpen, onClose, stake = 10, gameId = 'demo-game' }
                       onClick={startGame}
                       className="w-full flex items-center justify-between p-3 bg-blue-900/20 hover:bg-blue-900/30 border border-blue-500/30 rounded-lg text-blue-400 transition-colors"
                     >
-                        <span className="text-sm font-bold">Nueva Partida</span>
+                        <span className="text-sm font-bold">New Game</span>
                         <RotateCcw size={18}/>
                     </button>
                 </div>

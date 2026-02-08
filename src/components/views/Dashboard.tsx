@@ -10,7 +10,7 @@ import { GamesHubModal } from '../modals/GamesHubModal';
 import { TradingModal } from '../modals/TradingModal';
 import { MessagingModal } from '../modals/MessagingModal';
 
-// Componente principal del Dashboard
+// Main Dashboard Component
 export function Dashboard() {
   const { isChannelOpen } = useSession();
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -54,11 +54,11 @@ export function Dashboard() {
         
         {/* NEW 0. Messaging Chat */}
         <DashboardCard
-          title="Chat de Mensajería"
+          title="Messaging Chat"
           price="Free"
-          description="Busca perfiles de amigos en ENS y chatea con la seguridad de Yellow."
-          whyYellow="Identidad unificada y privacidad garantizada por la red."
-          buttonText="Buscar y Chatear"
+          description="Search for friends' ENS profiles and chat with Yellow's security."
+          whyYellow="Unified identity and privacy guaranteed by the network."
+          buttonText="Search and Chat"
           icon={<MessageCircle size={24} />}
           onClick={() => handleAppClick('Messaging')}
         />
@@ -67,9 +67,9 @@ export function Dashboard() {
         <DashboardCard
           title="AI Inference"
           price="$0.02"
-          description="Solicita una respuesta a un modelo de IA (LLM) pagando por uso exacto."
-          whyYellow="Hoy pagar $0.02 costaría $5+ de gas en Ethereum. Aquí el gas es $0."
-          buttonText="Abrir Chat"
+          description="Request an answer from an AI model (LLM) paying for exact usage."
+          whyYellow="Today paying $0.02 would cost $5+ in Ethereum gas. Here gas is $0."
+          buttonText="Open Chat"
           icon={<Bot size={24} />}
           onClick={() => handleAppClick('AI')}
         />
@@ -78,9 +78,9 @@ export function Dashboard() {
         <DashboardCard
           title="Micro-API"
           price="$0.005"
-          description="Compra un dato en tiempo real (Precio ETH, Clima, Sport score)."
-          whyYellow="Los micropagos reales son imposibles en L1 por las fees. Aquí son viables."
-          buttonText="Abrir Consola API"
+          description="Buy real-time data (ETH Price, Weather, Sport score)."
+          whyYellow="Real micropayments are impossible on L1 due to fees. Here they are viable."
+          buttonText="Open API Console"
           icon={<Code2 size={24} />}
           onClick={() => handleAppClick('API')}
         />
@@ -89,9 +89,9 @@ export function Dashboard() {
         <DashboardCard
           title="P2P Betting"
           badge="Wager"
-          description="Juega Ajedrez apostando USDC. Movimientos off-chain gratuitos (solo firmas)."
-          whyYellow="Solo pagas gas al liquidar al ganador. La partida ocurre enteramente off-chain."
-          buttonText="Iniciar Apuesta"
+          description="Play Chess betting USDC. Free off-chain moves (signatures only)."
+          whyYellow="You only pay gas when settling the winner. The game happens entirely off-chain."
+          buttonText="Start Wager"
           icon={<Trophy size={24} />}
           onClick={() => handleAppClick('Chess')}
         />
@@ -103,8 +103,8 @@ export function Dashboard() {
               variant="highlight"
               title="Yellow DEX"
               badge="Perps"
-              description="Futuros Perpetuos con libro de órdenes 100% On-Chain pero con UX de Off-Chain."
-              whyYellow="Zero-Block-Time trading. Actualizaciones de precio cada 100ms sin espera de confirmación de bloque."
+              description="Perpetual Futures with 100% On-Chain order book but with Off-Chain UX."
+              whyYellow="Zero-Block-Time trading. Price updates every 100ms without waiting for block confirmation."
               buttonText="Launch Terminal"
               icon={<CandlestickChart size={24} />}
               onClick={() => handleAppClick('Trading')}
